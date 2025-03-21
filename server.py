@@ -1,14 +1,16 @@
 from flask import Flask, render_template, url_for
-
+import datetime as dt
 app = Flask(__name__)
+
 
 @app.route("/")
 def lobby():
-    return render_template("lobby.html")
+    date = dt.datetime.now()
+    formatted_date = date.strftime("%d %B %Y")
+    formatted_time = date.strftime("%H:%M:%S")
+    day = date.strftime("%A")  
+    return render_template("order.html", date = formatted_date, time = formatted_time, day=day)
 
-@app.route("/ciro")
-def lobby():
-    return print("hello")
 
 if __name__ == "__main__":
     app.run(debug=True)
