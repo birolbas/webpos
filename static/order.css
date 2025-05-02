@@ -35,6 +35,7 @@ body {
 
 .buttons:hover {
     background-color: #2a2a35;
+    border-right: 1px solid aquamarine;
 }
 
 .buttons img {
@@ -106,7 +107,7 @@ body {
     display: flex;
     gap: 1rem;
     padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 5px solid rgba(255, 255, 255, 0.1);
 }
 
 .menu-items-sections p {
@@ -119,6 +120,7 @@ body {
 
 .menu-items-sections p:hover {
     background-color: #333340;
+    border: 1px solid aquamarine;
 }
 
 .products {
@@ -210,26 +212,13 @@ body {
     transition: all 0.3s ease;
     margin-top: 1rem;
 }
-.action-container {
-    display: inline-block;
-    width: 100%;
-    padding: 1rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin: 0px;
-    margin-top: 1rem;
-}
+
 .send-order {
-    width: 40%;
+    width: 49%;
     padding: 1rem;
     background-color: #4CAF50;
     color: white;
-    
+    margin-bottom: 1rem;
     border: none;
     border-radius: 5px;
     font-size: 1.1rem;
@@ -238,10 +227,11 @@ body {
     margin-top: 1rem;
 }
 .send-bill {
-    width: 40%;
+    width: 49%;
     padding: 1rem;
     background-color: #4CAF50;
     color: white;
+    margin-bottom: 1rem;
     border: 1px solid black;
     border-radius: 5px;
     font-size: 1.1rem;
@@ -252,6 +242,9 @@ body {
 .payment:hover {
     background-color: #45a049;
     transform: translateY(-2px);
+}
+.products button:hover{
+    border: 1px solid aquamarine;
 }
 
 /* Scrollbar Styling */
