@@ -185,19 +185,23 @@ body {
     padding: 1rem;
     overflow-y: auto;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0px;
 }
 .order-list p{
     color: white;
 }
 .order-summary {
-    padding: 1rem;
+    margin: 15px;
     background-color: #2a2a35;
+    border-radius: 5px;
 }
 
 .order-summary p {
+    padding: 1rem 0rem 1rem 1rem;
     margin: 0.5rem 0;
     font-size: 1.1rem;
     color: white;
+    border-bottom: 1px solid white;
 }
 
 .payment {
@@ -232,12 +236,43 @@ body {
     background-color: #4CAF50;
     color: white;
     margin-bottom: 1rem;
-    border: 1px solid black;
+    border: none;
     border-radius: 5px;
     font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 1rem;
+}
+.order-items {
+    list-style: none;
+    padding: 1rem;
+    margin: 0;
+}
+.order-items li{
+    display: flex;
+    justify-content: space-between;
+
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    border: 1px solid whitesmoke;
+    border-radius: 8px;
+    background-color: #2a2a35;
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.item-name{
+    color: white;
+}
+
+.price{
+    color: #4CAF50;
+    font-weight: 500;
+    margin-right: 1rem;
+    float: right;
+    
 }
 .payment:hover {
     background-color: #45a049;
