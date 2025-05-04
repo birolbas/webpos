@@ -54,11 +54,10 @@
                     <p>İçecek</p>
                 </div>
                 <div class="products">
-
-                    <button onclick="appendOrder()">Çorba</button>
-                    <button onclick="appendOrder()">Lahmacun</button>
-                    <button onclick="appendOrder()">Mantı</button>
-                    <button onclick="appendOrder()">Pilav</button>
+                    <button onclick="appendOrder(this)"><span class="product-name">Çorba</span> <span class="product-price">10</span></button>
+                    <button onclick="appendOrder(this)"><span class="product-name">Mantı</span> <span class="product-price">20</span></button>
+                    <button onclick="appendOrder(this)"><span class="product-name">Şiş</span> <span class="product-price">30</span></button>
+                    <button onclick="appendOrder(this)"><span class="product-name">Adana</span> <span class="product-price">40</span></button>
                 </div>
             </div>
         </div>
@@ -71,15 +70,14 @@
                 <div class="order-list">
                     <div class="orders">
                         <ul class="order-items">
-                            <li><span class="item-name">Pilav</span><span class="price">0 TL</span></li>
-                            <li><span class="item-name">Mantı</span><span class="price">0 TL</span></li>
+
                         </ul>
                     </div>
                 </div>
                 <div class="order-summary">
-                    <p>Servis: <span class="price">0 TL</span></p>
-                    <p>İndirim: <span class="price">0 TL</span></p>
-                    <p>Total: <span class="price">0 TL</span></p>
+                    <p>Servis: <span class="price">0</span></p>
+                    <p>İndirim: <span class="price">0</span></p>
+                    <p>Total: <span class="price total-price">0</span></p>
                     <div class="action-buttons">
                         <div class="action-container">
                             <button class="send-order" >
