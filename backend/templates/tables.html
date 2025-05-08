@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tables.css') }}">
+    <title>POS System - Tables</title>
+</head>
+<div class="containers">
+    <div class="left-bar-items">
+        <button class="buttons">
+            <img src="{{ url_for('static', filename='images/resto.png') }}" alt="resto logo">
+        </button>
+        <button class="buttons">
+            <i class="bi bi-house-door"></i>
+        </button>
+        <button class="buttons">
+            <i class="bi bi-bank"></i>
+        </button>
+        <button class="buttons">
+            <i class="bi bi-bicycle"></i>
+        </button>
+        <button class="buttons">
+            <i class="bi bi-box"></i>
+        </button>
+        <button class="buttons">
+            <i class="bi bi-gear"></i>
+        </button>
+        <button class="buttons quit-icon">
+            <i class="bi bi-box-arrow-in-left"></i>
+        </button>
+    </div>
+
+    <div style="width: 100%;" class="middle-bar">
+        <div class="middle-bar-top-bar">
+            <div class="datetime">
+                <p>{{day}}, {{date}}</p>
+                <p>{{time}}</p>
+            </div>
+            <div class="search-bar">
+                <form action="/search" method="get">
+                    <input type="text" id="search" name="q" placeholder="Search products...">
+                </form>
+            </div>
+        </div>
+        <div class="tables-items">
+            <div class="tables">
+                <button>S1</button>
+                <button>S2</button>
+                <button>S3</button>
+                <button>M1</button>
+                <button>M2</button>
+                <button>M3</button>
+                <button>BAR</button>
+
+            </div>
+        </div>
+    </div>
+</div>

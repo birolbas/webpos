@@ -14,5 +14,4 @@ function appendOrder(button){
     total_price = parseFloat(total_price);  
     total_price = total_price + product_price;
     document.getElementsByClassName("order-summary")[0].getElementsByClassName("total-price")[0].innerHTML = total_price;
-
 }
