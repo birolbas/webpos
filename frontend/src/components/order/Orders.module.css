@@ -1,3 +1,4 @@
+
 body {
     background-color: #272736;
     height: 100vh;
@@ -31,11 +32,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.buttons:hover {
-    background-color: #2a2a35;
-    border-right: 1px solid aquamarine;
 }
 
 .buttons img {
@@ -151,16 +147,6 @@ body {
     height: 100%;
 }
 
-
-
-.products button:hover {
-    background-color: #333340;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: 1px solid aquamarine;
-    
-}
-
 .right-bar {
     width: 30%;
     background-color: #1a1a24;
@@ -260,6 +246,7 @@ body {
 .order-items li{
     display: flex;
     justify-content: space-between;
+
     padding: 0.8rem 1.2rem;
     font-size: 1rem;
     border: 1px solid whitesmoke;
@@ -274,7 +261,11 @@ body {
 .order-name{
     color: white;
 }
-
+.product-amount{
+    color: green;
+    padding: 10px;
+    border: 1px white solid;
+}
 .price{
     color: #4CAF50;
     font-weight: 500;
@@ -285,6 +276,170 @@ body {
 .payment:hover {
     background-color: #45a049;
     transform: translateY(-2px);
+}
+.order-list button{
+    width: 50%;
+    height: 50px;
+    background-color: #2a2a35;
+    border: 1px solid white;
+    color: white;
+}
+.order-list button:hover{
+    cursor: pointer ;
+}
+
+.products button:hover {
+    background-color: #333340;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid aquamarine;
+    
+}
+
+
+.order-menu {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.order-id {
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+}
+
+.order-id p {
+    margin: 0;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.order-list {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0px;
+}
+.order-list p{
+    color: white;
+}
+.order-summary {
+    margin: 15px;
+    background-color: #2a2a35;
+    border-radius: 5px;
+}
+
+.order-summary p {
+    padding: 1rem 0rem 1rem 1rem;
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+    color: white;
+    border-bottom: 1px solid white;
+}
+
+.payment {
+    width: 100%;
+    padding: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+.action-container button{
+    margin-right: 6px;
+    margin-left: 0px;
+    padding: 10px;
+
+}
+.send-order {
+    width: 49%;
+    padding: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+.send-bill {
+    width: 49%;
+    padding: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+.order-items {
+    list-style: none;
+    padding: 1rem;
+    margin: 0;
+}
+.order-items li{
+    display: flex;
+    justify-content: space-between;
+
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    border: 1px solid whitesmoke;
+    border-radius: 8px;
+    background-color: #2a2a35;
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.order-name{
+    color: white;
+}
+.product-amount{
+    color: green;
+    padding: 10px;
+    border: 1px white solid;
+}
+.price{
+    color: #4CAF50;
+    font-weight: 500;
+    margin-right: 1rem;
+    float: right;
+    
+}
+.payment:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+.order-list button{
+    width: 50%;
+    height: 50px;
+    background-color: #2a2a35;
+    border: 1px solid white;
+    color: white;
+    margin:0px;
+    border-radius: 0px;
+}
+.order-list button:hover{
+    cursor: pointer ;
+}
+
+
+.previous-orders button{
+    size: 50px;
 }
 
 /* Scrollbar Styling */

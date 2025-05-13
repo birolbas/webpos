@@ -1,10 +1,9 @@
-import {useState, useEffect} from "react";
-import MyComponent from "./MyComponent";
-function App(){
-    return(
-        <> <MyComponent></MyComponent>
-        </>
-    )
+import WaiterLogin from './components/waiterLogin/WaiterLogin'
+function App() {
+
+  return (
+    <WaiterLogin/>
+  )
 }
 
 export default App

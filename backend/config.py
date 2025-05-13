@@ -1,11 +1,14 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-
+import psycopg2
 app = Flask(__name__)
-CORS(app)
+CORS(app)  
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:kedi7beni.@localhost:5432/resto"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
+conn = psycopg2.connect(
+    host="localhost",
+    dbname="restowebpos",
+    user="postgres",
+    password="kedi7beni",
+    port=5432,
+)
 
