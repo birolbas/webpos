@@ -4,7 +4,7 @@ import datetime as dt
 import json
 @app.route("/")
 def lobby():
-    return render_template("login.html")
+    return render_template("order.html")
 
 @app.route("/tables", methods=["GET"])
 def tables():

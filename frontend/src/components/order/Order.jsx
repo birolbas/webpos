@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Tables from "../tables/Tables";
 import Settings from "../settings/Settings";
 import resto from "../../assets/resto.png";
 import styles from './Orders.module.css';
+import staticStyles from '../staticStyle/StaticStyle.module.css'
+import LeftBar from "../staticStyle/LeftBar";
+import Clock from "../staticStyle/Clock";
 
-function Order({ table_id }) {
+function Order() {
+    const params = useParams();
+    const table_id = (params["table_id"])
+    
     const [prevOrders, setPrevOrders] = useState([]);
     const [newOrders, setNewOrders] = useState([]);
     const [totalOrders, setTotalOrders] = useState();
     const [displayOrderType, setDisplayOrderType] = useState("prev");
     const [totalPrice, setTotalPrice] = useState(0);
-
-    const [isHome, setIsHome] = useState(false);
-    const [isSettings, setIsSettings] = useState(false);
 
     useEffect(() => {
         newOrders.forEach(order => {
@@ -24,6 +29,9 @@ function Order({ table_id }) {
                 setTotalOrders([...prevOrders, ...newOrders]);
             }
         });
+        console.log("total orders",totalOrders)
+        console.log("prev orders",prevOrders)
+        console.log("new orders",newOrders)
     }, [newOrders]);
 
     useEffect(() => {
@@ -34,21 +42,14 @@ function Order({ table_id }) {
         console.log("TOTAL PRICE IS ", totalPrice);
     }, [totalPrice]);
 
-    function settings() {
-        console.log("settings clicked");
-        setIsSettings(true);
-        setIsHome(false);
-    }
 
-    function Home() {
-        setIsHome(true);
-        setIsSettings(false);
-    }
+
 
     function appendOrder(event) {
         setDisplayOrderType("new");
-        const productName = event.currentTarget.querySelector('.product-name').textContent;
-        const productPrice = event.currentTarget.querySelector('.product-price').textContent;
+        const productName = event.currentTarget.querySelector('#product-name').textContent;
+        console.log(productName)
+        const productPrice = event.currentTarget.querySelector('#product-price').textContent;
         const existingIndex = newOrders.findIndex(order => order.name === productName);
 
         if (existingIndex !== -1) {
@@ -119,45 +120,19 @@ function Order({ table_id }) {
             console.error("Hata:", error);
         }
 
-        setIsHome(true);
     };
 
-    if (isSettings) {
-        return <Settings />;
-    } else if (!isHome) {
-        return (
-            <div className={styles["containers"]}>
-                <div className={styles["left-bar-items"]}>
-                    <button className={styles["buttons"]}>
-                        <img src={resto} alt="resto logo" />
-                    </button>
-                    <button onClick={Home} className={styles["buttons"]}>
-                        <i className="bi bi-house-door"></i>
-                    </button>
-                    <button className={styles["buttons"]}>
-                        <i className="bi bi-bank"></i>
-                    </button>
-                    <button className={styles["buttons"]}>
-                        <i className="bi bi-bicycle"></i>
-                    </button>
-                    <button className={styles["buttons"]}>
-                        <i className="bi bi-box"></i>
-                    </button>
-                    <button onClick={settings} className={styles["buttons"]}>
-                        <i className="bi bi-gear"></i>
-                    </button>
-                    <button className={`${styles["buttons"]} ${styles["quit-icon"]}`}>
-                        <i className="bi bi-box-arrow-in-left"></i>
-                    </button>
-                </div>
 
-                <div className={styles["middle-bar"]}>
-                    <div className={styles["middle-bar-top-bar"]}>
-                        <div className={styles["datetime"]}>
-                            <p></p>
-                            <p></p>
+        return (
+            <div className={staticStyles["containers"]}>
+                <LeftBar></LeftBar>
+
+                <div className={staticStyles["middle-bar"]}>
+                    <div className={staticStyles["middle-bar-top-bar"]}>
+                        <div className={staticStyles["datetime"]}>
+                            <Clock></Clock>
                         </div>
-                        <div className={styles["search-bar"]}>
+                        <div className={staticStyles["search-bar"]}>
                             <form action="/search" method="get">
                                 <input type="text" id="search" name="q" placeholder="Search products..." />
                             </form>
@@ -171,20 +146,20 @@ function Order({ table_id }) {
                         </div>
                         <div className={styles["products"]}>
                             <button onClick={(event) => appendOrder(event)}>
-                                <span className={styles["product-name"]}>Çorba</span>
-                                <span className={styles["product-price"]}>10</span>
+                                <span className={styles["product-name"]} id="product-name">Çorba</span>
+                                <span className={styles["product-price"]} id="product-price">10</span>
                             </button>
                             <button onClick={(event) => appendOrder(event)}>
-                                <span className={styles["product-name"]}>Mantı</span>
-                                <span className={styles["product-price"]}>20</span>
+                                <span className={styles["product-name"]} id="product-name">Mantı</span>
+                                <span className={styles["product-price"]} id="product-price">20</span>
                             </button>
                             <button onClick={(event) => appendOrder(event)}>
-                                <span className={styles["product-name"]}>Şiş</span>
-                                <span className={styles["product-price"]}>30</span>
+                                <span className={styles["product-name"]} id="product-name">Şiş</span>
+                                <span className={styles["product-price"]} id="product-price">30</span>
                             </button>
                             <button onClick={(event) => appendOrder(event)}>
-                                <span className={styles["product-name"]}>Adana</span>
-                                <span className={styles["product-price"]}>40</span>
+                                <span className={styles["product-name"]} id="product-name">Adana</span>
+                                <span className={styles["product-price"]} id="product-price">40</span>
                             </button>
                         </div>
                     </div>
@@ -218,14 +193,19 @@ function Order({ table_id }) {
                             <p>Total: <span className={`${styles["price"]} ${styles["total-price"]}`}>{totalPrice}</span></p>
                             <div className={styles["action-buttons"]}>
                                 <div className={styles["action-container"]}>
-                                    <button onClick={setOrderToDB} className={styles["send-order"]}>
-                                        <i className="bi bi-send"></i>Sipariş Gönder
-                                    </button>
-                                    <button className={styles["send-bill"]}>
-                                        <i className="bi bi-printer"></i>Hesap Yazdır
-                                    </button>
+                                    <div className={styles["print-buttons"]}>
+                                        <Link to="/tables" onClick={setOrderToDB} className={styles["send-order"]}>
+                                            <i className={`bi bi-send ${styles["action-container-i"]}`}></i>
+                                            Sipariş Gönder
+                                        </Link>
+                                        <Link to="/" className={styles["send-bill"]}>
+                                            <i className={`bi bi-printer ${styles["action-container-i"]} `}></i>
+                                            Hesap Yazdır
+                                        </Link>
+                                    </div>
+
                                     <button className={styles["payment"]}>
-                                        <i className="bi bi-credit-card"></i> Ödeme Ekranı
+                                        <i className={`bi bi-credit-card ${styles["action-container-i"]}`} ></i> Ödeme Ekranı
                                     </button>
                                 </div>
                             </div>
@@ -235,9 +215,7 @@ function Order({ table_id }) {
             </div>
 
         );
-    } else {
-        return <Tables />;
     }
-}
+
 
 export default Order;

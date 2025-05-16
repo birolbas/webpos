@@ -1,8 +1,8 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import styles from './waiterLogin.module.css';
+import WaiterLoginStyles from './waiterLogin.module.css';
 import Tables from '../tables/Tables';
 import { useEffect, useState } from 'react';
-
+import { Navigate } from 'react-router-dom';
 function WaiterLogin() {
   const [passWord, setPassWord] = useState('');
   const [index, setIndex] = useState(0);
@@ -32,42 +32,42 @@ function WaiterLogin() {
   }
 
   if (loginSuccess) {
-    return <Tables />;
+    return <Navigate to="/tables" />;
   }
 
   return (
-    <div className={styles.container}>
+    <div className={WaiterLoginStyles["container"]}>
       <div>
-        <div className={styles.restourantName}>
-          <h1 className={styles.restopos}>Resto POS</h1>
-          <h2 className={styles.restopos}>Point of Sale System</h2>
-          <div className={styles["pin-container"]}>
-            <div className={styles["in-boxes"]}>
-              <div className={styles["pin-box"]} id="box0">{passWord[0]}</div>
-              <div className={styles["pin-box"]} id="box1">{passWord[1]}</div>
-              <div className={styles["pin-box"]} id="box2">{passWord[2]}</div>
-              <div className={styles["pin-box"]} id="box3">{passWord[3]}</div>
+        <div className={WaiterLoginStyles["restourantName"]}>
+          <h1 className={WaiterLoginStyles["restopos"]}>Resto POS</h1>
+          <h2 className={WaiterLoginStyles["restopos"]}>Point of Sale System</h2>
+          <div className={WaiterLoginStyles["pin-container"]}>
+            <div className={WaiterLoginStyles["in-boxes"]}>
+              <div className={WaiterLoginStyles["pin-box"]} id="box0">{passWord[0]}</div>
+              <div className={WaiterLoginStyles["pin-box"]} id="box1">{passWord[1]}</div>
+              <div className={WaiterLoginStyles["pin-box"]} id="box2">{passWord[2]}</div>
+              <div className={WaiterLoginStyles["pin-box"]} id="box3">{passWord[3]}</div>
             </div>
           </div>
         </div>
 
-        <div className={styles.buttons}>
-          <div className={styles.firstline}>
+        <div className={WaiterLoginStyles["buttons"]}>
+          <div className={WaiterLoginStyles["firstline"]}>
             {[1, 2, 3].map(n => <button key={n} onClick={appendPassword}>{n}</button>)}
           </div>
-          <div className={styles.secondline}>
+          <div className={WaiterLoginStyles["secondline"]}>
             {[4, 5, 6].map(n => <button key={n} onClick={appendPassword}>{n}</button>)}
           </div>
-          <div className={styles.thirdline}>
+          <div className={WaiterLoginStyles["thirdline"]}>
             {[7, 8, 9].map(n => <button key={n} onClick={appendPassword}>{n}</button>)}
           </div>
-          <div className={styles.forthline}>
-            <button className={styles.actionButtons}>
-              <i className="bi bi-backspace-fill"></i>
+          <div className={WaiterLoginStyles["forthline"]}>
+            <button className={WaiterLoginStyles["actionButtons"]}>
+              <i className={`bi bi-backspace ${WaiterLoginStyles["actionButtons"]}`}></i>
             </button>
             <button onClick={appendPassword}>0</button>
-            <button onClick={login} className={styles.actionButtons}>
-              <i className="bi bi-check2-circle"></i>
+            <button onClick={login} className={WaiterLoginStyles["actionButtons"]}>
+              <i className={`bi bi-check2-circle ${WaiterLoginStyles["actionButtons"]}`}></i>
             </button>
           </div>
         </div>

@@ -1,0 +1,37 @@
+a{
+    border-radius: 10px;
+}
+.settings{
+    background-color: #1a1a24;
+    border-radius: 10px;
+    height: calc(100% - 80px);
+    overflow: hidden;
+}
+.settings svg{
+    height: 120px;
+    background-color: #2a2a35;
+    padding: 0px;
+    margin: 1.5rem;
+    color: white;
+    justify-content: center;
+
+}
+.setting{
+    border: 0px solid white;
+    box-shadow: 0px;
+    height: fit-content;
+    width: calc(100% - 100px);
+    margin: 50px;
+    background-color: #2a2a35;
+    display: inline-flex;
+}
+.setting-explanation{
+    display: grid;
+    width: 100%;
+    margin: 0px;
+    text-align: left;
+    color:white;
+}
+.settings a:hover{
+    border: 1px solid aquamarine;
+}

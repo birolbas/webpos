@@ -1,104 +1,13 @@
 
-body {
-    background-color: #272736;
-    height: 100vh;
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.containers {
-    height: 100vh;
-    width: 100%;
-    display: flex;
-}
-
-.left-bar-items {
-    width: 8%;
-    height: 100vh;
-    background-color: #1a1a24;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem 0;
-}
-
-.buttons {
-    width: 100%;
-    height: 13%;
-    background-color: transparent;
-    color: white;
-    padding: 0;
-    border: none;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.buttons img {
-    height: 80%;
-    width: 80%;
-    object-fit: contain;
-}
-.buttons i{
-    font-size: 1.5rem;
-}
-.quit-icon {
-    margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.middle-bar {
-    width: 62%;
-    color: white;
-    padding: 1rem;
-    height: 100%;
-}
-
-.middle-bar-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    background-color: #1a1a24;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-}
-
-.middle-bar p {
-    margin: 0;
-    font-size: 1.2rem;
-}
-
-.search-bar {
-    flex: 1;
-    max-width: 400px;
-    margin-left: 2rem;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border: none;
-    border-radius: 25px;
-    background-color: #2a2a35;
-    color: white;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.search-bar input:focus {
-    outline: none;
-    background-color: #333340;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-}
-
 .menu-items {
     background-color: #1a1a24;
     border-radius: 10px;
     height: calc(100% - 80px);
     overflow: hidden;
 }
-
+i{
+    background-color: #4CAF50;
+}
 .menu-items-sections {
     display: flex;
     gap: 1rem;
@@ -210,33 +119,52 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 1rem;
+    margin: 10px 0px 10px 0px;
+    
+}
+a{
+    text-decoration: none;
+    display: flex;
+}
+a p{
+    width: 100%;
+}
+.print-buttons{
+    display: flex;
+}
+.send-order {
+    width: 50%;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 10px 10px 0px;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    padding: 10px;
 }
 
-.send-order {
-    width: 49%;
-    padding: 1rem;
-    background-color: #4CAF50;
-    color: white;
-    margin-bottom: 1rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
-}
 .send-bill {
-    width: 49%;
-    padding: 1rem;
+    width: 50%;
     background-color: #4CAF50;
     color: white;
-    margin-bottom: 1rem;
     border: none;
     border-radius: 5px;
     font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 1rem;
+    margin: 10px 0px 10px 0px;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    padding: 10px;
+}
+.action-name {
+    padding: 0px;
 }
 .order-items {
     list-style: none;
@@ -246,7 +174,6 @@ body {
 .order-items li{
     display: flex;
     justify-content: space-between;
-
     padding: 0.8rem 1.2rem;
     font-size: 1rem;
     border: 1px solid whitesmoke;
@@ -261,6 +188,7 @@ body {
 .order-name{
     color: white;
 }
+
 .product-amount{
     color: green;
     padding: 10px;
@@ -283,6 +211,8 @@ body {
     background-color: #2a2a35;
     border: 1px solid white;
     color: white;
+    margin: 0px;
+    border-radius: 0px;
 }
 .order-list button:hover{
     cursor: pointer ;
@@ -295,149 +225,13 @@ body {
     border: 1px solid aquamarine;
     
 }
-
-
-.order-menu {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.order-id {
-    padding: 1rem;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    justify-content: space-between;
-}
-
-.order-id p {
-    margin: 0;
-    font-size: 1.2rem;
-    color: white;
-}
-
-.order-list {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0px;
-}
-.order-list p{
-    color: white;
-}
-.order-summary {
-    margin: 15px;
-    background-color: #2a2a35;
-    border-radius: 5px;
-}
-
-.order-summary p {
-    padding: 1rem 0rem 1rem 1rem;
-    margin: 0.5rem 0;
-    font-size: 1.1rem;
-    color: white;
-    border-bottom: 1px solid white;
-}
-
-.payment {
-    width: 100%;
-    padding: 1rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
-}
 .action-container button{
-    margin-right: 6px;
-    margin-left: 0px;
     padding: 10px;
 
 }
-.send-order {
-    width: 49%;
-    padding: 1rem;
+.action-container-i{
     background-color: #4CAF50;
-    color: white;
-    margin-bottom: 1rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
 }
-.send-bill {
-    width: 49%;
-    padding: 1rem;
-    background-color: #4CAF50;
-    color: white;
-    margin-bottom: 1rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
-}
-.order-items {
-    list-style: none;
-    padding: 1rem;
-    margin: 0;
-}
-.order-items li{
-    display: flex;
-    justify-content: space-between;
-
-    padding: 0.8rem 1.2rem;
-    font-size: 1rem;
-    border: 1px solid whitesmoke;
-    border-radius: 8px;
-    background-color: #2a2a35;
-    margin-bottom: 0px;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-.order-name{
-    color: white;
-}
-.product-amount{
-    color: green;
-    padding: 10px;
-    border: 1px white solid;
-}
-.price{
-    color: #4CAF50;
-    font-weight: 500;
-    margin-right: 1rem;
-    float: right;
-    
-}
-.payment:hover {
-    background-color: #45a049;
-    transform: translateY(-2px);
-}
-.order-list button{
-    width: 50%;
-    height: 50px;
-    background-color: #2a2a35;
-    border: 1px solid white;
-    color: white;
-    margin:0px;
-    border-radius: 0px;
-}
-.order-list button:hover{
-    cursor: pointer ;
-}
-
-
 .previous-orders button{
     size: 50px;
 }
