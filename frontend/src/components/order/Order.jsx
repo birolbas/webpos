@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Tables from "../tables/Tables";
 import Settings from "../settings/Settings";
-import resto from "../../assets/resto.png";
 import styles from './Orders.module.css';
 import staticStyles from '../staticStyle/StaticStyle.module.css'
 import LeftBar from "../staticStyle/LeftBar";
