@@ -4,11 +4,11 @@ import datetime as dt
 import json
 @app.route("/")
 def lobby():
-    return render_template("order.html")
+    return render_template("ordernnnnnnnnnnnnnnn.html")
 
 @app.route("/tables", methods=["GET"])
 def tables():
-    tables_in_db = """SELECT * FROM table_pricing ORDER BY table_id"""
+    tables_in_db = """SELECT * FROM table_grid_pricing"""
     cur = conn.cursor()
     cur.execute(tables_in_db)
     data = cur.fetchall()
