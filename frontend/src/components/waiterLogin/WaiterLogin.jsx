@@ -32,7 +32,7 @@ function WaiterLogin() {
   }
 
   if (loginSuccess) {
-    return <Navigate to="/tables" />;
+    return <Navigate to="/main_menu" />;
   }
 
   return (

@@ -1,10 +1,12 @@
 import LeftBar from "../staticStyle/LeftBar"
 import staticStyles from "../staticStyle/StaticStyle.module.css"
-import MiddleTopBar from "../staticStyle/MiddleTopBar"
 import styles from "./TableSettings.module.css"
 import { useEffect, useState } from "react"
+import { Navigate, useNavigate } from "react-router-dom"
 function TableSettings() {
-    const [newTables, setNewTables] = useState([])
+    const navigate = useNavigate()
+    const [placedTables, setPlacedTables] = useState([])
+    const [placeableTables, setPlaceableTables] = useState([])
     const [totalTables, setTotalTables] = useState([])
     const [isNewTable, setIsNewTable] = useState(false)
     const [row, setRow] = useState(5)
@@ -13,28 +15,22 @@ function TableSettings() {
     const [layout, setLayout] = useState([])
     const [isFloor, setIsFloor] = useState(false)
     const [floors, setFloors] = useState([{
-        Name: "Kat-1",
+        Name: "İlk Kat",
         gridRow: 5,
         gridCol: 5,
-        tables: [{
-            tableName: "M1",
-            tableGridCol: 1,
-            tableGridRow: 1
-        }, {
-            tableName: "S1",
-            tableGridCol: 2,
-            tableGridRow: 1
-        }]
+        tables: [],
+        tablePrice: 0,
     }])
     const [floorData, setFloorData] = useState(floors[0])
 
     const getTablesFromDB = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:5000/tables")
+            const response = await fetch("http://127.0.0.1:5000/table_grid")
             if (response.ok) {
                 var data = await response.json()
-                console.log("data is ",data)
+                console.log("data is ", data)
                 data = data.map((item) => item[0])
+                console.log("data map", data)
             } else {
                 console.log("error happened", response.statusText)
             }
@@ -42,6 +38,28 @@ function TableSettings() {
             console.log("an error acc", error)
         }
     }
+
+    const sendStructureToDB = async () => {
+        try {
+            const response = await fetch("http://localhost:5000/table_grid_save", {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(floors)
+            })
+            if (response.ok) {
+                const data = await response.json()
+                console.log("ok", data);
+            } else {
+                console.log("error ac", response.statusText)
+            }
+        } catch (error) {
+            console.log("error happened", error)
+        }
+    }
+
 
     function saveNewTable() {
         const table_id = document.getElementById("new-table-input").value
@@ -51,9 +69,11 @@ function TableSettings() {
             document.getElementById("new-table-input").value = ""
             document.getElementById("new-table-input").placeholder =
                 "MASA ZATEN OLUŞTURULMUŞ"
+
         } else {
-            setNewTables((prev) => [...prev, table_id])
-            setTotalTables((prev) => [...prev, table_id])
+            setTotalTables([...totalTables, table_id])
+            setPlaceableTables([...placeableTables, table_id])
+            console.log("PLACEABLE OLAN DEİŞTİ", placeableTables)
             document.getElementById("new-table-input").value = ""
             document.getElementById("new-table-input").placeholder = "Masa İsmi"
         }
@@ -62,7 +82,17 @@ function TableSettings() {
     function saveGridLayout() {
         setCol(document.getElementById("grid-col").value)
         setRow(document.getElementById("grid-row").value)
-        setLayout()
+        const tablesToUngrid = []
+        floorData.tables.forEach(el => {
+            console.log(el)
+            tablesToUngrid.push(el.tableName)
+        }
+        )
+        floorData.tables = []
+        setTotalTables([...totalTables, ...tablesToUngrid])
+        console.log("bu floors", floors)
+        console.log("bu da floors data", floorData)
+
     }
     useEffect(() => {
         setMatrix(row * col)
@@ -73,66 +103,63 @@ function TableSettings() {
         floorData.gridRow = row
     }, [row, col])
 
-    useEffect(() => {
-        console.log("yeni masalar", newTables)
-    }, [newTables])
+
 
     useEffect(() => {
         getTablesFromDB()
     }, [])
 
-
-
     function changeGridLayout() {
-    setLayout()
-    const tablesArray = Array.isArray(floorData?.tables) 
-        ? floorData.tables 
-        : Object.values(floorData?.tables || {});
+        setLayout()
+        const tablesArray = Array.isArray(floorData?.tables)
+            ? floorData.tables
+            : Object.values(floorData?.tables || {});
 
-    const buttons = [];
-    
-    for (let i = 1; i <= col; i++) {
-        for (let j = 1; j <= row; j++) {
-            const table = tablesArray.find(table =>
-                table.tableGridCol === i &&
-                table.tableGridRow === j
-            );
-            const item = (
-                <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    className={styles["grid-items"]}
-                    style={{ gridColumnStart: i, gridRowStart: j }}
-                >
-                    <div className={styles["buttons-container"]}>
-                        <div className={styles["plus-button"]}>
-                            <button style={{ backgroundColor: table ? "#4361ee" : "" }}>
-                                {table ? table.tableName : "+"}
-                            </button>
-                        </div>
-                        <div
-                            className={styles["trash-button"]}
-                            style={{ display: table ? "flex" : "none" }}
-                        >
-                            <button onClick={(e) => deleteTable(e, table)}>
-                                <i className="bi bi-trash"></i>
-                            </button>
+        const buttons = [];
+
+        for (let i = 1; i <= col; i++) {
+            for (let j = 1; j <= row; j++) {
+                const table = tablesArray.find(table =>
+                    table.tableGridCol === i &&
+                    table.tableGridRow === j
+                );
+                const item = (
+                    <div
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        className={styles["grid-items"]}
+                        style={{ gridColumnStart: i, gridRowStart: j }}
+                    >
+                        <div className={styles["buttons-container"]}>
+                            <div className={styles["plus-button"]}>
+                                <button style={{ backgroundColor: table ? "#4361ee" : "" }}>
+                                    {table ? table.tableName : "+"}
+                                </button>
+                            </div>
+                            <div
+                                className={styles["trash-button"]}
+                                style={{ display: table ? "flex" : "none" }}
+                            >
+                                <button onClick={(e) => deleteTable(e, table)}>
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            );
+                );
 
-            buttons.push(item);
+                buttons.push(item);
+            }
         }
+
+        const elements = document.querySelectorAll(`.${styles["tables-to-drag-container"]} button`);
+        elements.forEach((el) => {
+            el.style.display = "flex";
+        });
+
+        setLayout(buttons);
     }
 
-    const elements = document.querySelectorAll(`.${styles["tables-to-drag-container"]} button`);
-    elements.forEach((el) => {
-        el.style.display = "flex";
-    });
-
-    setLayout(buttons);
-    }
 
     function setTablePosition(e) {
         const tableId = e.dataTransfer.getData("tableID");
@@ -141,35 +168,37 @@ function TableSettings() {
         const gridRow = parseInt(gridItem.style.gridRowStart);
 
         if (gridItem) {
+            setFloors(prevFloors => {
+                const updatedFloors = prevFloors.map(floor => {
+                    if (floor.Name === floorData.Name) {
+                        console.log("floor data", floorData)
+                        const exists = floorData.tables.some(t => t.tableName === tableId);
+                        if (exists) return floor;
 
-            const updatedFloors = floors.map(floor => {
-                if (floor.Name === floorData.Name) {
-                    const exists = floor.tables.some(t => t.tableName === tableId);
-                    if (exists) return floor;
+                        const newTable = {
+                            tableName: tableId,
+                            tableGridCol: gridCol,
+                            tableGridRow: gridRow
+                        };
+                        return {
+                            ...floor,
+                            tables: [...floor.tables, newTable]
+                        };
+                    }
+                    return floor;
+                });
 
-                    const newTable = {
-                        tableName: tableId,
-                        tableGridCol: gridCol,
-                        tableGridRow: gridRow
-                    };
-                    return {
-                        ...floor,
-                        tables: [...floor.tables, newTable]
-                    };
-                }
-                return floor;
+                const updatedFloorData = updatedFloors.find(f => f.Name === floorData.Name);
+                setFloorData(updatedFloorData);
+
+                return updatedFloors;
             });
 
-            setFloors(updatedFloors);
-
-            const updatedFloorData = updatedFloors.find(f => f.Name === floorData.Name);
-            setFloorData(updatedFloorData);
-            changeGridLayout()
-            const indexToRemove = totalTables.findIndex(tables => tables === tableId)
-            const removedTotalTables = totalTables.filter((_, index) => index !== indexToRemove)
-            setTotalTables(removedTotalTables)
+            setPlaceableTables(prevTables => {
+                const indexToRemove = prevTables.findIndex(tables => tables === tableId);
+                return prevTables.filter((_, index) => index !== indexToRemove);
+            });
         }
-        
     }
 
 
@@ -189,7 +218,7 @@ function TableSettings() {
         });
 
         setFloors(updatedFloors);
-        setTotalTables([...totalTables, tableName])
+        setPlaceableTables([...placeableTables, tableName])
         const updatedFloorData = updatedFloors.find(f => f.Name === floorData.Name);
         setFloorData(updatedFloorData);
         changeGridLayout()
@@ -201,11 +230,11 @@ function TableSettings() {
             setFloorData(current);
         }
         changeGridLayout()
-
     }, [floors]);
 
     function handleDragStart(e) {
         e.dataTransfer.setData("tableID", e.target.textContent)
+
     }
     function handleDragOver(e) {
         e.preventDefault()
@@ -227,14 +256,12 @@ function TableSettings() {
         setRow(gridRow)
         const gridCol = floorData.gridCol
         setCol(gridCol)
-
-
-
     }, [floorData])
 
     function changeFloor() {
         console.log(floorData)
         const options = document.querySelector(`.${styles["choose-create-floor"]}`)
+        console.log("options", options)
         if (isFloor === false) {
             setIsFloor(true)
             options.style.display = "block"
@@ -254,7 +281,7 @@ function TableSettings() {
                 newFloorInput.value = ""
                 newFloorInput.placeholder = "Bu isimde bir kat zaten mevcut."
             } else {
-                const newFloor = { Name: newFloorName, gridRow: 3, gridCol: 3, tables: {} }
+                const newFloor = { Name: newFloorName, gridRow: 3, gridCol: 3, tables: [] }
                 setFloors([...floors, newFloor])
                 newFloorInput.value = ""
                 newFloorInput.placeholder = "Yeni Kat Adı Giriniz"
@@ -272,12 +299,12 @@ function TableSettings() {
         const floorName = (e.target.textContent)
         floors.forEach((floor, index) => {
             if (floor.Name === floorName) {
-                setFloorData(floor) 
+                setFloorData(floor)
                 changeGridLayout()
             }
         })
     }
-    
+
 
     function saveTableGridLayout() {
         const newTables = []
@@ -286,32 +313,45 @@ function TableSettings() {
 
         layout.forEach((item, index) => {
             const buttonName = item.textContent
-            console.log("suanki button", buttonName)
             if (buttonName !== "+") {
                 const layoutProperties = (item.parentElement.parentElement.style)
                 const row = layoutProperties.gridRowStart
                 const col = layoutProperties.gridColumnStart
                 const table = {
                     tableName: buttonName,
-                    tableGridRow: row,
-                    tableGridCol: col
+                    tableGridRow: parseInt(row),
+                    tableGridCol: parseInt(col)
                 }
                 newTables.push(table)
             }
         })
-        setFloors(prevFloors =>
-            prevFloors.map(floor =>
+
+        setFloors(prevFloors => {
+            const updatedFloors = prevFloors.map(floor =>
                 floor.Name === floorName
                     ? { ...floor, tables: newTables }
                     : floor
-            ))
-        console.log(floors)
+            );
+
+            const updatedFloorData = updatedFloors.find(f => f.Name === floorName);
+            setFloorData(updatedFloorData);
+
+            return updatedFloors;
+        });
+        sendStructureToDB()
     }
+
+    useEffect(() => {
+        if (floorData) {
+            changeGridLayout();
+        }
+    }, [floorData?.tables, matrix]);
+
     return (
         <>
             <div className={styles["page-container"]}>
                 <div className={staticStyles.containers}>
-                    <LeftBar></LeftBar>
+
                     <div style={{ width: "100%" }} className={staticStyles["middle-bar"]}>
                         <div
                             className={`${styles["new-table-input-box"]} ${isNewTable ? styles["shown"] : ""}`}
@@ -348,7 +388,7 @@ function TableSettings() {
                                     +
                                 </button>
 
-                                {totalTables.map((table, index) => (
+                                {placeableTables.map((table, index) => (
                                     <button
                                         draggable="true"
                                         onDragStart={handleDragStart}
@@ -408,9 +448,6 @@ function TableSettings() {
 
                                                                 </div>
                                                             </div>
-
-
-
                                                         </div>
                                                     )}
                                                 </div>

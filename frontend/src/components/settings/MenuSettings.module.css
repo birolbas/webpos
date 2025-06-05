@@ -1,0 +1,118 @@
+.item-container {
+    background-color: #272736;
+    border-radius: 10px;
+    height: calc(100% - 80px);
+    overflow: hidden;
+}
+.item {
+    padding: 1rem;
+    gap: 1rem;
+    overflow-y: auto;
+    height: calc(100% - 70px);
+}
+.append-menu-item{
+    background-color: #1a1a24;
+    height: 10%;
+    display: flex;
+    padding: 20px 60px 20px 30px;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 15px;
+    border-bottom: 0px;
+    margin-bottom: 0.5rem;
+}
+.append-menu-item button{
+    display: flex;
+    border-radius: 0px;
+    width: 200px;
+    background-color: green;
+    color: white;
+    align-items: center;
+}
+.append-menu-item i{
+    background-color: green;
+    margin-right: 10px;
+}
+.table-headers{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 0.25fr;
+    background-color: #1a1a24;
+    border-bottom: 1px solid aquamarine;
+    padding: 1rem 0rem 1rem 0rem;
+}
+.table-headers p{
+    padding-left: 1rem;
+    text-align: left;
+}
+.table-items{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 0.25fr;
+    background-color: #1a1a24;
+    border-bottom: 1px solid aquamarine;
+}
+.table-items:hover{
+    background-color: #272736;
+}
+.table-items button{
+    background-color: inherit;
+    color: white;
+    padding: 0px;
+    margin: 0px;
+    text-align: right;
+    padding-right: 1rem;
+    height: auto;
+    width: auto;
+}
+.table-items p{
+    border-left: 1px solid white;
+    text-align: center;
+}
+.menu-input{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 0.25fr;
+    border-right: 0px;    
+    border:1px solid white;
+}
+.menu-input:last-child{
+    border-right: none;
+}
+.table-input{
+    height: 100%;
+    border-right: 1px solid white;
+}
+.table-input input{
+    height: 100%;
+    display: block;
+    background-color: #272736;
+    box-shadow: none;
+    text-align: center;
+    color:white;
+    border: none;
+    width: 100%;
+    height: 100%;
+    font-size: 19.2px;
+    outline: none;
+    padding: 0px;
+    margin: 0px;
+
+}
+.table-input-save button{
+    background-color: inherit;
+    color: white;
+    padding: 0px;
+    margin: 0px;
+    text-align: right;
+    height: auto;
+    width: auto;
+    height: 100%;
+    padding-right: 16px;
+}
+.table-input-save i{
+    background-color: green;    
+    height: 100%;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

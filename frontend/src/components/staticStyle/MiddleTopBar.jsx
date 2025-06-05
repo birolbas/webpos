@@ -4,6 +4,7 @@ function MiddleTopBar() {
   return (
     <>
         <div className={staticStyles["middle-bar-top-bar"]}>
+          <div>goback</div>
           <div className={staticStyles["datetime"]}>
             <Clock></Clock>
           </div>

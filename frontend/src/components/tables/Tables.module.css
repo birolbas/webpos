@@ -1,3 +1,5 @@
+
+
 .tables {
     padding: 1rem;
     display: grid;
@@ -53,12 +55,12 @@
     transition: all 0.3s ease;
 }
 
-.tables-sections p:hover {
+.tables-sections p:hover{
     background-color: #333340;
     border: 1px solid aquamarine;
 }
 
-body {
+body{
     background-color: #272736;
     height: 100vh;
     margin: 0;
@@ -86,13 +88,15 @@ body {
     text-decoration: none;
     border-radius: 10px;
 }
+
 .table-species{
     display: grid;
 }
+
 .table-id{
-    justify-content: center;
-    align-items: center;
+    text-align:center;
 }
+
 .table-price{
     justify-self: center;
     align-items: center;
@@ -107,14 +111,49 @@ body {
 
 .middle-bar-top-bar {
     display: flex;
-    align-items: center;
+    position: relative;
     justify-content: space-between;
+    align-items: center;
     padding: 1rem;
     background-color: #1a1a24;
     border-radius: 10px;
     margin-bottom: 1rem;
 }
+.floors{
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+}
 
+.floors button{
+    border-radius: 0px;
+    margin-bottom: 0px;
+    background-color: #2d2d3f;
+    color: white;
+
+}
+.floor-choose{
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width:auto; 
+    border: 1px solid white;
+    background-color: #272736;
+
+}
+.floor-to-choose{
+    width: 100px;
+    padding: 0px;
+
+}
+.floor-to-choose button{
+    width: 100%;
+    margin: 10px 0px 5px 0px  ;
+    margin-bottom: 10px;
+
+}
 .middle-bar p {
     margin: 0;
     font-size: 1.2rem;
@@ -142,7 +181,6 @@ body {
     background-color: #333340;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
-
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {

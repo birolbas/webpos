@@ -7,10 +7,16 @@ import WaiterLogin from './components/waiterLogin/WaiterLogin.jsx'
 import Order from './components/order/Order.jsx'
 import Settings from './components/settings/Settings.jsx'
 import TableSettings from './components/settings/TableSettings.jsx'
+import MenuSettings from './components/settings/MenuSettings.jsx'
+import MainMenu from './components/mainMenu/MainMenu.jsx'
 const router = createBrowserRouter([
     {
         path: '/',
         element: <WaiterLogin />
+    },
+    {
+        path:'/main_menu',
+        element:<MainMenu/>
     },
     {
         path: '/tables',
@@ -27,6 +33,10 @@ const router = createBrowserRouter([
     {
         path:'/settings/table_settings',
         element:<TableSettings/>
+    },
+    {
+        path:'/settings/menu_settings',
+        element:<MenuSettings/>
     }
 
 ])

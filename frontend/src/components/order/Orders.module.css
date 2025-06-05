@@ -1,13 +1,14 @@
-
 .menu-items {
     background-color: #1a1a24;
     border-radius: 10px;
     height: calc(100% - 80px);
     overflow: hidden;
 }
+
 i{
     background-color: #4CAF50;
 }
+
 .menu-items-sections {
     display: flex;
     gap: 1rem;
@@ -24,6 +25,22 @@ i{
 }
 
 .menu-items-sections p:hover {
+    background-color: #333340;
+    border: 1px solid aquamarine;
+}
+.menu-items-sections button {
+    width: auto;
+    margin: 0px;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    background-color: #2a2a35;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 16px;
+}
+
+.menu-items-sections button:hover {
     background-color: #333340;
     border: 1px solid aquamarine;
 }
@@ -57,25 +74,25 @@ i{
 }
 
 .right-bar {
-    width: 30%;
-    background-color: #1a1a24;
-    height: 100vh;
+    width: 35%;
     display: flex;
     flex-direction: column;
 }
 
 .order-menu {
-    height: 100%;
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .order-id {
+    background-color: #1a1a24;
     padding: 1rem;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
+    
 }
 
 .order-id p {
@@ -85,21 +102,29 @@ i{
 }
 
 .order-list {
+    background-color: #1a1a24;
     flex: 1;
     padding: 1rem;
     overflow-y: auto;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0px;
+    height: 100vh;
 }
+
 .order-list p{
     color: white;
 }
+
 .order-summary {
-    margin: 15px;
-    background-color: #2a2a35;
+    background-color: #1a1a24;
     border-radius: 5px;
 }
 
+.order-details{
+    margin: 15px;
+    margin-bottom: 0px;
+    background-color:#2a2a35;
+}
 .order-summary p {
     padding: 1rem 0rem 1rem 1rem;
     margin: 0.5rem 0;
@@ -122,16 +147,20 @@ i{
     margin: 10px 0px 10px 0px;
     
 }
+
 a{
     text-decoration: none;
     display: flex;
 }
+
 a p{
     width: 100%;
 }
+
 .print-buttons{
     display: flex;
 }
+
 .send-order {
     width: 50%;
     background-color: #4CAF50;
@@ -144,10 +173,9 @@ a p{
     margin: 10px 10px 10px 0px;
     justify-content: center;
     align-items: center;
-    height: 40px;
+    height: 60px;
     padding: 10px;
 }
-
 .send-bill {
     width: 50%;
     background-color: #4CAF50;
@@ -160,46 +188,62 @@ a p{
     margin: 10px 0px 10px 0px;
     justify-content: center;
     align-items: center;
-    height: 40px;
+    height: 60px;
     padding: 10px;
 }
+
 .action-name {
     padding: 0px;
 }
+
+.orders ul{
+    padding: 0px;
+}
+
 .order-items {
     list-style: none;
-    padding: 1rem;
     margin: 0;
 }
+
 .order-items li{
     display: flex;
-    justify-content: space-between;
-    padding: 0.8rem 1.2rem;
+    padding: 0.8rem 1rem 0.8rem 1rem;
     font-size: 1rem;
-    border: 1px solid whitesmoke;
-    border-radius: 8px;
-    background-color: #2a2a35;
+    border-bottom:rgb(31, 41, 55) 1px solid;
+    background-color: rgb(3, 7, 18);
     margin-bottom: 0px;
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
-}
-
-.order-name{
-    color: white;
+    height: 40px;
 }
 
 .product-amount{
     color: green;
     padding: 10px;
-    border: 1px white solid;
+    background-color: #1F2937;
+    width: 3%;
+}
+.order-name{
+    color: white;
+    text-align: left;
+    padding-left: 10px;
+    width: 77%;
+}
+.order-item-actions button{
+    border: 0px !important;
+    width: 50px !important;
+}
+.order-item-actions i{
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .price{
     color: #4CAF50;
     font-weight: 500;
-    margin-right: 1rem;
     float: right;
-    
+    width: 25%;
 }
 .payment:hover {
     background-color: #45a049;
@@ -225,6 +269,9 @@ a p{
     border: 1px solid aquamarine;
     
 }
+.action-buttons{
+    padding: 0px 15px 0px 15px;
+}
 .action-container button{
     padding: 10px;
 
@@ -235,6 +282,8 @@ a p{
 .previous-orders button{
     size: 50px;
 }
+
+
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
