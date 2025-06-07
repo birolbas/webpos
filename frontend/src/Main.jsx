@@ -9,6 +9,7 @@ import Settings from './components/settings/Settings.jsx'
 import TableSettings from './components/settings/TableSettings.jsx'
 import MenuSettings from './components/settings/MenuSettings.jsx'
 import MainMenu from './components/mainMenu/MainMenu.jsx'
+import Payment from './components/order/Payment.jsx'
 const router = createBrowserRouter([
     {
         path: '/',
@@ -37,7 +38,12 @@ const router = createBrowserRouter([
     {
         path:'/settings/menu_settings',
         element:<MenuSettings/>
+    },
+    {
+        path:'/payment/:table_id',
+        element:<Payment/>
     }
+
 
 ])
 

@@ -1,0 +1,136 @@
+
+.container{
+    display: grid;
+    grid-template-rows: 85% 15%;
+    height: 100vh;
+    overflow: hidden;
+}
+.table-orders{
+    display: grid;
+    grid-template-columns: .75fr 1fr 1fr;
+}
+.orders{
+    margin: 10px;
+    overflow-y: scroll;
+}
+.table-species{
+    color: white;
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1a24;
+    overflow-y: scroll;
+    max-height: calc(100vh);
+
+}
+.table-species p{    
+    color: white;
+    font-weight: bold;
+}
+#table-id{
+    margin: 1rem 0rem 0rem 1rem;
+    font-size: 30px;
+}
+
+.payment-input{
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    background-color: #1a1a24;
+    text-align: center;
+    color:white;
+
+}
+.order{
+    font-size: 20px;
+    background-color: #272736;
+    display: flex;
+    margin-bottom: 1rem;
+    color: white;
+    border-left: 0px;
+    padding:0rem 1rem 0rem 1rem;
+}
+.order-name-amount{
+    margin-right: auto;
+    justify-content: center;
+}
+.order-price{
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.price-data{
+    display: grid;
+    grid-template-columns: .75fr 1fr 1fr;
+    color: white;
+    text-align: center;
+
+}
+.price{
+    background-color: #16161f;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.price p{
+    margin-bottom: 0px;
+    font-size: 20px;
+}
+.price p{
+    margin: 0px;
+}
+.payment-input-price{
+    margin-left: 1rem;
+    height: 10%;
+}
+.payment-input-price p{
+    font-size: 30px;
+    margin-top: 1rem;    
+    float: left;
+    margin-bottom: 1rem;
+}
+.payment-input-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-left: 1rem;
+}
+.payment-input-buttons button{
+    font-size: 20px;
+    font-weight: bold;
+}
+.payment-input-button button{
+    float: left;
+}
+.payment-type{
+    display: flex;
+    margin: .5rem 1rem 0rem 1rem;
+}
+.payment-type button{
+    width: 50%;
+    border-radius: 0px;
+    font-size: 20px;
+    font-weight: bolder;
+}
+.payments{    
+    margin-left: 1rem;
+    text-align: center;
+    color: white;    
+    background-color: #1a1a24;
+    overflow-y: scroll;
+    max-height: calc(100vh);
+    padding: 0px;
+}
+.payment-container{
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+.payment{
+    display: flex;
+    justify-content: space-around;
+    font-size: 20px;
+    margin: 0rem 1rem 1rem 1rem;
+    border-radius: 15px;
+    background-color: #272736;
+
+}

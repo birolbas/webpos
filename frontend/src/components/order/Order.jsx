@@ -7,11 +7,13 @@ import styles from './Orders.module.css';
 import staticStyles from '../staticStyle/StaticStyle.module.css'
 import LeftBar from "../staticStyle/LeftBar";
 import Clock from "../staticStyle/Clock";
+import { Link } from 'react-router-dom';
 
 function Order() {
     const params = useParams();
     const table_id = (params["table_id"])
     const navigate = useNavigate();
+
     const [prevOrders, setPrevOrders] = useState([]);
     const [newOrders, setNewOrders] = useState([]);
     const [displayOrderType, setDisplayOrderType] = useState("prev");
@@ -47,6 +49,8 @@ function Order() {
     useEffect(() => {
         const getOrderFromDB = async () => {
             try {
+                console.log("table id is ",table_id)
+                console.log("asdfasdfasdfasdfasdfasdf")
                 const getOrdersResponse = await fetch("http://127.0.0.1:5000/get_orders");
                 const getProductsResponse = await fetch("http://127.0.0.1:5000/get_products")
                 if (getOrdersResponse.ok && getProductsResponse.ok) {
@@ -70,16 +74,12 @@ function Order() {
                         products:chosenProducts,
                     }
                     setChosenCategory(object)
+                    console.log("getOrdersData",getOrdersData)
+                    const Index = getOrdersData.findIndex(o => o[2]=== table_id)
                     
-                    for (let i = 0; i < getOrdersData.length; i++) {
-                        if (table_id === getOrdersData[i][1]) {
-                            console.log("BUNU TOTAL PARA YAPIYOR", getOrdersData[i][3]);
-                            console.log("PREV ORDERSI BUNA SETLIYOR", getOrdersData[i][2]);
-                            setPrevOrders(getOrdersData[i][2]);
-                            setTotalPrice(parseFloat(getOrdersData[i][3]));
-                            break;
-                        }
-                    }
+                    setPrevOrders([...getOrdersData[Index][5]])
+                    setTotalPrice(parseFloat(getOrdersData[Index][6]))
+
                 } else {
                     console.log("error happened", getOrdersResponse.statusText);
                 }
@@ -102,6 +102,7 @@ function Order() {
             products: categoryProducts
         }
         setChosenCategory(object)
+
     }
 
     const setOrderToDB = async () => {
@@ -116,11 +117,22 @@ function Order() {
                 totalOrders.push({ ...newOrder })
             }
         })
-        
+        function getTodayDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); 
+            const day = String(now.getDate()).padStart(2, '0');         
+            return `${year}-${month}-${day}`;
+            }
+        const date = getTodayDate()
+        const checkNumber = document.getElementsByClassName(styles["order-id"])[0].lastChild.lastChild.textContent
         try {
             const requestBody = {
-                table_id: table_id,
+                restaurant_name: "TEST",
+                checkNumber: checkNumber,
+                oppeningDate: date,
                 orders: totalOrders,
+                table_id: table_id,
                 total_price: totalPrice
             };
             console.log("req body", requestBody)
@@ -147,7 +159,13 @@ function Order() {
     useEffect(()=>{
         console.log("productCategory",chosenCategory)
     },[chosenCategory])
-
+    
+    function routePaymentScreen(){
+        if(totalPrice>0 && prevOrders.length>0){
+            console.log(typeof totalPrice)
+            navigate(`/payment/${table_id}`)
+        }
+    }
     return (
         <div className={staticStyles["containers"]}>
             <div className={staticStyles["middle-bar"]}>
@@ -190,7 +208,7 @@ function Order() {
                 <div className={styles["order-menu"]}>
                     <div className={styles["order-id"]}>
                         <p>Masa Numarası: <span id="table-id">{table_id}</span></p>
-                        <p>Order ID: <span>351</span></p>
+                        <p>Order ID: <span>1</span></p>
                     </div>
                     <div className={styles["order-list"]}>
                         <div className={styles["new-prev-orders"]}>
@@ -243,7 +261,7 @@ function Order() {
                                     </button>
                                 </div>
 
-                                <button className={styles["payment"]}>
+                                <button onClick={routePaymentScreen} className={styles["payment"]}>
                                     <i className={`bi bi-credit-card ${styles["action-container-i"]}`} ></i> Ödeme Ekranı
                                 </button>
                             </div>

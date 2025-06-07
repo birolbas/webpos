@@ -1,6 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css"
 import { useState, useEffect } from "react"
-import { useParams, useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Link } from 'react-router-dom';
 import Order from '../order/Order'
 import Settings from "../settings/Settings"
@@ -11,7 +11,6 @@ import LeftBar from "../staticStyle/LeftBar"
 function Tables() {
     const location = useLocation();
     const navigate = useNavigate();
-    const params = useParams();
     const [tables, setTables] = useState([])
     const [chosenTable, setChosenTable] = useState("")
     const [isSettings, setIsSettings] = useState(false)
@@ -29,8 +28,17 @@ function Tables() {
             if (tableGridData.ok) {
                 const gridData = await tableGridData.json()
                 const priceData = await tablePriceData.json()
-                console.log("asdfasdf", gridData)
-                setTablePricing(priceData)
+                console.log("tablePriceData",priceData)
+                const table_prices = []
+                priceData.forEach((data,index)=>{
+                    const object = {
+                        table_name:data[2],
+                        table_price:data[6]
+                    }
+                    table_prices.push(object)
+                })
+                console.log("tablepricing",table_prices)
+                setTablePricing(table_prices)
                 setFloors(gridData)
                 setChosenFloor(gridData[0])
                 setRow(gridData[0][1])
@@ -39,14 +47,14 @@ function Tables() {
                 gridData.forEach((data, _) => {
                     const floorTables = data[3]
                     floorTables.forEach((item, _) => {
-                        const existingIndex = priceData.findIndex(pData => pData[1] === item.tableName)
+                        const existingIndex = table_prices.findIndex(pData => pData.table_name === item.tableName)
                         if (existingIndex !== -1) {
                             const object = {
                                 floorName: data[0],
                                 tableName: item.tableName,
                                 tableGridCol: item.tableGridCol,
                                 tableGridRow: item.tableGridRow,
-                                tablePrice: priceData[existingIndex][3],
+                                tablePrice: table_prices[existingIndex].table_price,
                                 isCheckOpen: true
                             }
                             table.push(object)
@@ -76,20 +84,25 @@ function Tables() {
     function changeFloor(e) {
         const floorName = e.target.textContent
         const index = (floors.findIndex(floor => floor[0] === floorName))
+        console.log("floors index",floors[index])
         setRow(floors[index][1])
         setCol(floors[index][2])
         setChosenFloor(floors[index])
         setTables(floors[index][3])
         const table = []
         floors[index][3].forEach((data, _) => {
-                const existingIndex = tablePricing.findIndex(pData => pData[1] === data.tableName)
+                console.log("datatablename",data.tableName)
+                console.log("tablePricing",tablePricing)
+                const existingIndex = tablePricing.findIndex(pData => pData.table_name === data.tableName)
+                console.log("existing index",existingIndex)
+                console.log("data budur",data)
                 if (existingIndex !== -1) {
                     const object = {
                         floorName: floorName,
                         tableName: data.tableName,
                         tableGridCol: data.tableGridCol,
                         tableGridRow: data.tableGridRow,
-                        tablePrice: tablePricing[existingIndex][3],
+                        tablePrice: tablePricing[existingIndex].table_price,
                         isCheckOpen: true
                     }
                     table.push(object)
@@ -113,7 +126,12 @@ function Tables() {
 
     useEffect(() => {
         getTables()
+        
     }, [])
+    useEffect(()=>{
+        console.log("tables are", tables)
+    },[tables])
+
     useEffect(() => {
         getTables();
     }, [location]);
@@ -193,7 +211,7 @@ function Tables() {
                                     }}>
                                     <div className={tablesStyle['table-species']}>
                                         <span className={tablesStyle['table-id']}>{table.tableName}</span>{" "}
-                                        <span className={tablesStyle["table-price"]}>{table.tablePrice > 0 ? table.tablePrice : ""} </span>
+                                        <span className={tablesStyle["table-price"]}>{table.tablePrice > 0 ? `${table.tablePrice} ₺`  : ""}</span>
                                     </div>
                                 </Link>
                             ))}
