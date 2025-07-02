@@ -282,7 +282,15 @@ a p{
 .previous-orders button{
     size: 50px;
 }
-
+.people-count{
+    margin-left: auto;
+}
+.people-count-input{
+    width: 20%;
+    height: 30px;
+    background-color: white;
+    border: none;
+}
 
 
 /* Scrollbar Styling */

@@ -82,8 +82,9 @@ body {
 .middle-bar {
     width: 62%;
     color: white;
-    padding: 0rem 1rem 1rem 1rem;
     height: 100vh;
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 .middle-bar-top-bar {
@@ -91,7 +92,6 @@ body {
     align-items: center;
     padding: 1rem;
     background-color: #1a1a24;
-    border-radius: 10px;
     margin-bottom: 1rem;
     height: 10%;
 }

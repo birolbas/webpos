@@ -1,0 +1,59 @@
+.income-container{
+    width: 100%;
+}
+.income-summary{
+    display: flex;
+    width: 100%;
+}
+.summary{
+    border-radius: 1rem;
+    width: 50%;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    background-color: rgb(55, 65, 81);
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+.summary-headers{
+    font-size: 22px;
+    margin-bottom:1rem !important;
+}
+.summary-data{
+    font-weight: bold;
+    margin-bottom:1rem !important;
+}
+.last-week-comp{
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    color:rgb(0, 255, 0);
+}
+.payment-methods{
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-right: 1rem;
+    margin-left: 1rem;
+    background-color: rgb(55, 65, 81);
+    margin-bottom: 1rem;
+}
+.payment-method{
+    background-color: #272736;
+    padding: 1rem;
+    border-radius: 15px;
+    margin-bottom: 1rem !important;
+    display: flex;
+    justify-content: space-between ;
+
+}
+.payment-amount{
+    color: rgb(0, 255, 0);;
+}
+.action-buttons-container{
+    padding: 0rem 1rem 0rem ;
+}
+.action-buttons-container button{
+    width: 48%;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+}

@@ -172,5 +172,22 @@ def close_check(table_id):
     conn.commit()
     return jsonify({"status":"success"}), 200
 
+
+@app.route("/income", methods=["POST"])
+def income():
+    cur = conn.cursor()
+    day = str(request.get_json())
+    print(f"{day} is the day")
+    singleday_income_script = """ select * from closed_checks
+                        where openningdate = %s
+                         """
+
+    values = (day,)
+    cur.execute(singleday_income_script, values)
+    data = cur.fetchall()
+    print(data)
+
+
+    return data
 if __name__ == "__main__":
     app.run(debug=True) 

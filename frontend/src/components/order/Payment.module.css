@@ -30,6 +30,10 @@
     margin: 1rem 0rem 0rem 1rem;
     font-size: 30px;
 }
+.table-id-go-back{
+    display: flex;
+    flex-direction: row;
+}
 
 .payment-input{
     display: flex;

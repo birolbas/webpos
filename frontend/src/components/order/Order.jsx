@@ -21,6 +21,7 @@ function Order() {
     const [productCategory, setProductCategory] = useState([])
     const [products, setProducts] = useState([])
     const [chosenCategory, setChosenCategory] = useState([])
+    const [peopleCount, setPeopleCount] = useState(0)
     function appendOrder(event) {
         setDisplayOrderType("new");
         const productName = event.currentTarget.querySelector('#product-name').textContent;
@@ -105,6 +106,7 @@ function Order() {
 
     }
 
+
     const setOrderToDB = async () => {
         const totalOrders = []
         prevOrders.forEach(prev => totalOrders.push({ ...prev }))
@@ -178,10 +180,9 @@ function Order() {
                     <div className={staticStyles["datetime"]}>
                         <Clock></Clock>
                     </div>
-                    <div className={staticStyles["search-bar"]}>
-                        <form action="/search" method="get">
-                            <input type="text" id="search" name="q" placeholder="Search products..." />
-                        </form>
+                    <div className={styles["people-count"]}>
+                        <p>Kişi Sayısı</p>
+                        <input className={styles["people-count-input"]} value={peopleCount} type="number" onChange={(e) => setPeopleCount(e.target.value)} />
                     </div>
                 </div>
 

@@ -18,7 +18,7 @@ function MainMenu() {
                     <Link to="/tables" className={styles['buttons']}>
                         <i className={`bi bi-house-door ${styles['buttons']}`} ></i>
                     </Link>
-                    <Link to="/orders" className={styles['buttons']}>
+                    <Link to="/income" className={styles['buttons']}>
                         <i className={`bi bi-bank ${styles['buttons']}`}></i>
                     </Link>
                     <Link to="/delivery" className={styles['buttons']}>
