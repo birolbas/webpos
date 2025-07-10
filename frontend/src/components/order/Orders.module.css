@@ -207,7 +207,7 @@ a p{
 
 .order-items li{
     display: flex;
-    padding: 0.8rem 1rem 0.8rem 1rem;
+    padding: 0.8rem 1rem 0.8rem 0rem;
     font-size: 1rem;
     border-bottom:rgb(31, 41, 55) 1px solid;
     background-color: rgb(3, 7, 18);
@@ -219,6 +219,7 @@ a p{
 }
 
 .product-amount{
+    margin-left: 1rem;
     color: green;
     padding: 10px;
     background-color: #1F2937;
@@ -291,8 +292,30 @@ a p{
     background-color: white;
     border: none;
 }
+.order-item-actions-box {
+    display: none;
+    position: absolute;
+    background-color: white;
+    z-index: 1000;
+    width: 35%;
+
+}
+.order-description{
+    display: flex;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 15px;
+    z-index: 1000;
+    border: 1px solid black;
+    padding: 1rem;
+    background-color: white;
 
 
+
+
+}
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;

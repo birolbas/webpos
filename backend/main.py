@@ -47,6 +47,7 @@ def order():
     openning_date = data["oppeningDate"]
     orders = json.dumps(data["orders"])
     total_price = data["total_price"]
+    guest_count = data["guest_count"]
     cur = conn.cursor()
 
     isCheckOpen_script = """SELECT table_id FROM open_checks where restaurant_name =%s AND table_id =%s AND restaurant_name =%s """
@@ -54,18 +55,20 @@ def order():
 
     if cur.fetchall() == []:
         print("IF CALISTI") 
-        order_save_script ="""INSERT INTO open_checks (restaurant_name, table_id, check_number, openningdate, products , total_price )
-                                Values(%s,%s,%s,%s,%s,%s)"""
-        values = (restaurant_name, table_id, check_number,openning_date, orders,total_price)
+        openning_time = datetime.now()
+        openning_time = openning_time.strftime("%H:%M")
+        order_save_script ="""INSERT INTO open_checks (restaurant_name, table_id, check_number, openningdate, products , total_price , guest_count, openningtime)
+                                Values(%s,%s,%s,%s,%s,%s,%s, %s)"""
+        values = (restaurant_name, table_id, check_number,openning_date, orders,total_price, guest_count, openning_time)
         cur.execute(order_save_script, values)
         conn.commit()
 
     else:
         print("ELSE CALIUSTI")
         order_save_script = """UPDATE open_checks 
-                                SET products = %s, total_price = %s
+                                SET products = %s, total_price = %s, guest_count = %s
                                 WHERE table_id = %s AND restaurant_name = %s"""
-        values = (orders,total_price, table_id, restaurant_name)
+        values = (orders,total_price,guest_count, table_id, restaurant_name)
         cur.execute(order_save_script, values)
         conn.commit()
 
@@ -149,9 +152,11 @@ def set_payments(table_id):
 def close_check(table_id):
     cur = conn.cursor()
     data = request.get_json()
+    print(f"{data} data is this")
     get_open_check = """SELECT * FROM open_checks WHERE table_id=%s"""
     cur.execute(get_open_check,(table_id,))
     data = cur.fetchall()
+    print(data)
     id = data[0][0]
     restaurant_name = data[0][1]
     check_number = data[0][3]
@@ -159,11 +164,18 @@ def close_check(table_id):
     products = json.dumps(data[0][5])
     total_price = data[0][6]
     payments = json.dumps(data[0][7])
-    now = str(datetime.now().replace(microsecond=0))
-    values = (id, restaurant_name, table_id, check_number, oppenningdate, products, total_price, payments,now)
+    guest_count = data[0][8]
+    openningtime = data [0][9]
+    today = datetime.today()
+    today = today.strftime("%Y-%m-%d")
+    hour = datetime.now()
+    hour = hour.strftime("%H:%M:%S")
+    print(data)
+    print(oppenningdate)
+    values = (id, restaurant_name, table_id, check_number, oppenningdate, products, total_price, payments, guest_count, openningtime, today, hour, )
 
     update_closed_check = """INSERT INTO closed_checks
-                            values(%s,%s, %s, %s, %s, %s, %s, %s, %s)"""
+                            values(%s,%s, %s, %s, %s, %s, %s, %s, %s, %s,%s, %s)"""
     
     cur.execute(update_closed_check, values)
     
@@ -176,17 +188,37 @@ def close_check(table_id):
 @app.route("/income", methods=["POST"])
 def income():
     cur = conn.cursor()
-    day = str(request.get_json())
+    day = request.get_json()
     print(f"{day} is the day")
-    singleday_income_script = """ select * from closed_checks
-                        where openningdate = %s
-                         """
+    if len(day)==10:
+        singleday_income_script = """ SELECT  restaurant_name,table_id, openningdate, products, total_price, payments, closing_date, guest_count, openningtime
+                                    FROM closed_checks
+                                    where closing_date = %s
+                                        UNION ALL
 
-    values = (day,)
-    cur.execute(singleday_income_script, values)
-    data = cur.fetchall()
-    print(data)
+                                    SELECT restaurant_name, table_id,  openningdate, products, total_price, payments, NULL AS closing_date, guest_count, openningtime
+                                    FROM open_checks
+                                    where openningdate = %s
+                                    """
 
+        values = (day,day)
+        cur.execute(singleday_income_script, values)
+        data = cur.fetchall()
+    else :
+        print(day)
+        singleday_income_script = """ SELECT  restaurant_name,table_id, openningdate, products, total_price, payments, closing_date, guest_count, openningtime
+                                    FROM closed_checks
+                                    where  closing_date > %s  AND closing_date <= %s
+                                        UNION ALL
+
+                                    SELECT restaurant_name, table_id,  openningdate, products, total_price, payments, NULL AS closing_date, guest_count, openningtime
+                                    FROM open_checks
+                                    where  openningdate > %s  AND openningdate <= %s
+                                    """
+        values = (day[0], day[1], day[0], day[1])
+        cur.execute(singleday_income_script, values)
+        data = cur.fetchall()
+        print(f"data is {data}")
 
     return data
 if __name__ == "__main__":

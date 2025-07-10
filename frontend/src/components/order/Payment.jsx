@@ -95,7 +95,7 @@ function Payment() {
         }
     }
     const closeCheck = async (updatedPayments) => {
-
+        console.log("updatedpayments", updatedPayments)
         try {
             const response = await fetch(`http://localhost:5000/close_check/${table_id}`, {
                 method: "POST",

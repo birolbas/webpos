@@ -21,7 +21,7 @@ function Order() {
     const [productCategory, setProductCategory] = useState([])
     const [products, setProducts] = useState([])
     const [chosenCategory, setChosenCategory] = useState([])
-    const [peopleCount, setPeopleCount] = useState(0)
+    const [guestCount, setGuestCount] = useState(0)
     function appendOrder(event) {
         setDisplayOrderType("new");
         const productName = event.currentTarget.querySelector('#product-name').textContent;
@@ -46,11 +46,51 @@ function Order() {
         const newTotalPrice = totalPrice + Number(productPrice);
         setTotalPrice(newTotalPrice);
     }
+    function closeActions(index) {
+        console.log("indexs", index)
+        const orderList = document.querySelector(`.${styles["order-items"]}`)
+        const orders = orderList.querySelectorAll("li")[index]
+        const actionBox = orders.querySelectorAll(`.${styles["order-item-actions-box"]}`)[0].style.display = "none"
+        console.log(actionBox)
+    }
+    function openActions(index) {
+        console.log("indexs", index)
+        const orderList = document.querySelector(`.${styles["order-items"]}`)
+        const orders = orderList.querySelectorAll("li")[index]
+        const actionBox = orders.querySelectorAll(`.${styles["order-item-actions-box"]}`)[0].style.display = "flex"
+        console.log(actionBox)
+    }
+    function deleteOrder(index) {
+        if (displayOrderType == "prev") {
+            const prevOrdersToDelete = [...prevOrders]
+            console.log("prevoreders", prevOrders)
+            const priceToSub = prevOrdersToDelete[index].price
+            setTotalPrice(totalPrice - priceToSub)
+            prevOrdersToDelete.splice(index, 1)
+            setPrevOrders(prevOrdersToDelete)
+            closeActions(index)
+        } else {
+            const newOrdersToDelete = [...newOrders]
+            const priceToSub = newOrdersToDelete[index].price
+            setTotalPrice(totalPrice - priceToSub)
+            newOrdersToDelete.splice(index, 1)
+            setNewOrders(newOrdersToDelete)
+            closeActions(index)
+        }
+    }
 
+    useEffect(()=>{
+        setOrderToDB(false)
+    },[prevOrders])
+    
+    function addDescription(index) {
+
+
+    }
     useEffect(() => {
         const getOrderFromDB = async () => {
             try {
-                console.log("table id is ",table_id)
+                console.log("table id is ", table_id)
                 console.log("asdfasdfasdfasdfasdfasdf")
                 const getOrdersResponse = await fetch("http://127.0.0.1:5000/get_orders");
                 const getProductsResponse = await fetch("http://127.0.0.1:5000/get_products")
@@ -60,10 +100,10 @@ function Order() {
                     const productCategories = getProductsData[0][1]
                     setProducts(getProductsData[0][1])
                     const totalCategories = []
-                    productCategories.forEach((category, index)=>{
+                    productCategories.forEach((category, index) => {
                         const existingIndex = totalCategories.findIndex(c => category.productCategory === c)
                         console.log(existingIndex)
-                        if(existingIndex ===-1){
+                        if (existingIndex === -1) {
                             totalCategories.push(productCategories[index].productCategory)
                         }
                     })
@@ -71,15 +111,16 @@ function Order() {
                     const chosenProducts = productCategories.filter(p => p.productCategory === totalCategories[0])
 
                     const object = {
-                        category:totalCategories[0],
-                        products:chosenProducts,
+                        category: totalCategories[0],
+                        products: chosenProducts,
                     }
                     setChosenCategory(object)
-                    console.log("getOrdersData",getOrdersData)
-                    const Index = getOrdersData.findIndex(o => o[2]=== table_id)
-                    
+                    console.log("getOrdersData", getOrdersData)
+                    const Index = getOrdersData.findIndex(o => o[2] === table_id)
+
                     setPrevOrders([...getOrdersData[Index][5]])
                     setTotalPrice(parseFloat(getOrdersData[Index][6]))
+                    setGuestCount(getOrdersData[Index][8])
 
                 } else {
                     console.log("error happened", getOrdersResponse.statusText);
@@ -92,12 +133,12 @@ function Order() {
         getOrderFromDB();
     }, [table_id]);
 
-    function changeCategory(e){
-        console.log("chosenCategory",chosenCategory)
+    function changeCategory(e) {
+        console.log("chosenCategory", chosenCategory)
         const categoryName = e.target.textContent
-        console.log("products",products)
+        console.log("products", products)
         const categoryProducts = products.filter(p => p.productCategory === categoryName)
-        console.log("categoryProducts",categoryProducts)
+        console.log("categoryProducts", categoryProducts)
         const object = {
             category: categoryName,
             products: categoryProducts
@@ -107,7 +148,8 @@ function Order() {
     }
 
 
-    const setOrderToDB = async () => {
+    const setOrderToDB = async (isDelete) => {
+        const isOrderDeleted = isDelete
         const totalOrders = []
         prevOrders.forEach(prev => totalOrders.push({ ...prev }))
         newOrders.forEach(newOrder => {
@@ -122,10 +164,10 @@ function Order() {
         function getTodayDate() {
             const now = new Date();
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); 
-            const day = String(now.getDate()).padStart(2, '0');         
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
-            }
+        }
         const date = getTodayDate()
         const checkNumber = document.getElementsByClassName(styles["order-id"])[0].lastChild.lastChild.textContent
         try {
@@ -135,7 +177,8 @@ function Order() {
                 oppeningDate: date,
                 orders: totalOrders,
                 table_id: table_id,
-                total_price: totalPrice
+                total_price: totalPrice,
+                guest_count: guestCount
             };
             console.log("req body", requestBody)
             const response = await fetch("http://localhost:5000/orders", {
@@ -147,9 +190,9 @@ function Order() {
                 body: JSON.stringify(requestBody)
             });
             console.log("total orders,", totalOrders)
-            if (response.ok) {
+            if (response.ok && isOrderDeleted) {
                 navigate("/tables")
-            } else {
+            } else{
                 console.log("Bir hata oluştu:", response.statusText);
             }
         } catch (error) {
@@ -158,12 +201,12 @@ function Order() {
 
 
     };
-    useEffect(()=>{
-        console.log("productCategory",chosenCategory)
-    },[chosenCategory])
-    
-    function routePaymentScreen(){
-        if(totalPrice>0 && prevOrders.length>0){
+    useEffect(() => {
+        console.log("productCategory", chosenCategory)
+    }, [chosenCategory])
+
+    function routePaymentScreen() {
+        if (totalPrice > 0 && prevOrders.length > 0) {
             console.log(typeof totalPrice)
             navigate(`/payment/${table_id}`)
         }
@@ -173,7 +216,7 @@ function Order() {
             <div className={staticStyles["middle-bar"]}>
                 <div className={staticStyles["middle-bar-top-bar"]}>
                     <div className={staticStyles["go-back-button"]}>
-                        <button onClick={()=>navigate(-1)}>
+                        <button onClick={() => navigate(-1)}>
                             <i className="bi bi-arrow-return-left"></i>
                         </button>
                     </div>
@@ -182,25 +225,25 @@ function Order() {
                     </div>
                     <div className={styles["people-count"]}>
                         <p>Kişi Sayısı</p>
-                        <input className={styles["people-count-input"]} value={peopleCount} type="number" onChange={(e) => setPeopleCount(e.target.value)} />
+                        <input className={styles["people-count-input"]} value={guestCount} type="number" onChange={(e) => setGuestCount(e.target.value)} />
                     </div>
                 </div>
 
                 <div className={styles["menu-items"]}>
                     <div className={styles["menu-items-sections"]}>
-                        {productCategory.map((category, index)=>(
-                            <button onClick={(e)=>changeCategory(e)}>{category}</button>
-                        ))} 
+                        {productCategory.map((category, index) => (
+                            <button onClick={(e) => changeCategory(e)}>{category}</button>
+                        ))}
 
                     </div>
                     <div className={styles["products"]}>
-                        {chosenCategory.products?.map((product, _)=>(
-                        <button onClick={(event) => appendOrder(event)}>
-                            <span className={styles["product-name"]} id="product-name">{product.productName}</span>
-                            <span className={styles["product-price"]} id="product-price">{product.productPrice}</span>
-                        </button>
+                        {chosenCategory.products?.map((product, _) => (
+                            <button onClick={(event) => appendOrder(event)}>
+                                <span className={styles["product-name"]} id="product-name">{product.productName}</span>
+                                <span className={styles["product-price"]} id="product-price">{product.productPrice}</span>
+                            </button>
                         ))}
-                        
+
                     </div>
                 </div>
             </div>
@@ -233,11 +276,45 @@ function Order() {
                                         </div>
 
                                         <div className={styles["order-item-actions"]}>
-                                            <button>
+                                            <button onClick={() => openActions(index)}>
                                                 <i className="bi bi-three-dots"></i>
                                             </button>
                                         </div>
 
+                                        <div className={styles["order-item-actions-box"]}>
+                                            <button>
+                                                <i className="bi bi-file-text"> </i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-percent"></i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-basket3"></i>
+                                            </button>
+                                            <button onClick={() => deleteOrder(index)}>
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                            <button onClick={() => closeActions(index)}>
+                                                <i className="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                        <div className={styles["order-description"]}>
+                                            <div>
+                                                <h1>Açıklama Ekle</h1>
+                                                <div className={styles["new-description-input"]}>
+                                                    <input
+                                                        id="new-description-input"
+                                                        type="text"
+                                                        placeholder="Açıklama"
+                                                    />
+                                                    <div className={styles["action-buttons"]}>
+                                                        <div className={styles["save-new-button"]}>
+                                                            <button >Kaydet</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                     </li>
                                 ))}
@@ -252,7 +329,7 @@ function Order() {
                         <div className={styles["action-buttons"]}>
                             <div className={styles["action-container"]}>
                                 <div className={styles["print-buttons"]}>
-                                    <button to="/tables" onClick={setOrderToDB} className={styles["send-order"]}>
+                                    <button onClick={() => setOrderToDB(true)} className={styles["send-order"]}>
                                         <i className={`bi bi-send ${styles["action-container-i"]}`}></i>
                                         Sipariş Gönder
                                     </button>

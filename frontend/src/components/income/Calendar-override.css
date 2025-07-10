@@ -1,0 +1,7 @@
+.react-calendar__tile--hasActive {
+  background: white !important;
+}
+.react-calendar__tile--rangeEnd{
+    background: #006edc !important;
+    color: white;
+}
