@@ -95,11 +95,14 @@ body{
 
 .table-id{
     text-align:center;
+    font-size: 28px;
 }
 
 .table-price{
     justify-self: center;
-    align-items: center;
+    align-items: center;    
+    font-size: 25px;
+
 }
 
 .middle-bar {

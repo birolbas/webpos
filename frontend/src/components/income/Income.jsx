@@ -57,7 +57,9 @@ function Income() {
                     "Total": 0,
                     "Average per Person": 0,
                     "Guest Count": 0,
-                    "Peak Hours": []
+                    "Peak Hours": [],
+                    "Open Total": 0,
+                    "Closed Total": 0
                 }
                 console.log()
                 console.log("data is ", data)
@@ -104,6 +106,9 @@ function Income() {
                     pTypes["Average per Person"] = 0
                 }
                 console.log(pTypes["Guest Count"])
+                pTypes["Open Total"] = pTypes["Total"] - pTypes["Kredi Kartı"] - pTypes["Nakit"]
+                pTypes["Closed Total"] = pTypes["Total"] - pTypes["Open Total"] 
+
                 setPayments(pTypes)
                 console.log("peak saatler", pTypes["Peak Hours"])
                 if(pTypes["Peak Hours"].length > 0){
@@ -150,13 +155,7 @@ function Income() {
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Ciro</p>
                             <p className={styles["summary-data"]}>{payments["Total"]}₺</p>
-                            <p className={styles["last-week-comp"]}>
-                                <svg style={{ marginRight: "5px" }} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trending-up w-4 h-4 text-green-400 mr-1"
-                                ><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>
-                                </svg>
-                                +135₺
-                            </p>
+                            <p className={styles["last-week-comp"]}> Açık Çekler: {payments["Open Total"]}₺ Kapalı Çekler: {payments["Closed Total"]} </p>
                         </div>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Müşteri</p>

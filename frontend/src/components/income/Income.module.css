@@ -26,7 +26,7 @@
     display: flex;
     flex-direction: row;
     text-align: center;
-    color:rgb(0, 255, 0);
+    color: rgb(128, 125, 125);
 }
 .payment-methods{
     padding: 1rem;

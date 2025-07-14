@@ -11,9 +11,14 @@ import MenuSettings from './components/settings/MenuSettings.jsx'
 import MainMenu from './components/mainMenu/MainMenu.jsx'
 import Payment from './components/order/Payment.jsx'
 import Income from './components/income/Income.jsx'
+import LoginSign from './components/login-signup/loginSign.jsx'
 const router = createBrowserRouter([
     {
-        path: '/',
+        path:'/',
+        element: <LoginSign />
+    },
+    {
+        path: '/waiter_login',
         element: <WaiterLogin />
     },
     {

@@ -1,0 +1,79 @@
+.main-menu-container{
+    display: flex;
+    flex-direction: row;
+}
+.left-menu {
+    width: 50%;
+    display: grid;
+    place-items: center;
+    height: 100vh;
+}
+.left-menu img {
+    width: 70%;
+}
+.right-menu-container{
+    width: 50%;
+}
+.right-menu-container h1{
+    text-align: center;
+    color: white;
+    margin-top: 4rem;
+}
+.login-form-container{
+    height: 100vh;           
+    justify-content: center;
+    align-items: center;     
+    display: flex;
+}
+
+.login-form{
+    padding: 2rem;
+    justify-content: center;
+    align-items: center;
+    border-radius: 15px;
+    margin: auto;
+    background-color: rgba(29, 29, 29, 0.685);
+}
+.login-form h1{
+    color: white;
+    margin-top: 0px;
+}
+.login-form h2{
+    color: white;
+    margin-bottom: 0px;
+}
+.e-mail-input input{
+    box-sizing: border-box;
+    width: 100%;
+    margin: auto;
+    height: 2rem;
+    background-color: rgba(29, 29, 29, 0.685);
+    border: none;
+    color: white;
+}
+.password-input input{
+    box-sizing: border-box;
+    width: 100%;
+    margin: auto;
+    height: 2rem;
+    background-color: rgba(29, 29, 29, 0.685);
+    border: none;
+    color: white;
+
+}
+.login-button button{
+    width: 100%;
+    border-radius: 0px;
+    padding: 0px;
+    margin: 1rem 0rem 0rem 0rem;
+    font-size: 22px;
+    font-weight: bold;
+}
+.create-acc{
+    display: flex;
+    flex-direction: row;
+}
+.create-acc a{
+    margin-top: 16px;
+    margin-left: 5px;
+}

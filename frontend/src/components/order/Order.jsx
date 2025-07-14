@@ -47,45 +47,183 @@ function Order() {
         setTotalPrice(newTotalPrice);
     }
     function closeActions(index) {
-        console.log("indexs", index)
-        const orderList = document.querySelector(`.${styles["order-items"]}`)
-        const orders = orderList.querySelectorAll("li")[index]
-        const actionBox = orders.querySelectorAll(`.${styles["order-item-actions-box"]}`)[0].style.display = "none"
-        console.log(actionBox)
+        if(displayOrderType == "prev"){
+            const actionBox = document.querySelector(`#prev-${index}`)
+            actionBox.style.display = "none"
+            console.log(actionBox)
+        }
+    }
+    function closeAllActions(){
+        const allActionBoxes = document.querySelectorAll('[id^="prev-"], [id^="new-"]');
+        allActionBoxes.forEach(box => {
+        if (box.classList.contains(styles["order-item-actions-box"])) {
+            box.style.display = "none";
+        }
+    });
     }
     function openActions(index) {
-        console.log("indexs", index)
-        const orderList = document.querySelector(`.${styles["order-items"]}`)
-        const orders = orderList.querySelectorAll("li")[index]
-        const actionBox = orders.querySelectorAll(`.${styles["order-item-actions-box"]}`)[0].style.display = "flex"
-        console.log(actionBox)
-    }
-    function deleteOrder(index) {
-        if (displayOrderType == "prev") {
-            const prevOrdersToDelete = [...prevOrders]
-            console.log("prevoreders", prevOrders)
-            const priceToSub = prevOrdersToDelete[index].price
-            setTotalPrice(totalPrice - priceToSub)
-            prevOrdersToDelete.splice(index, 1)
-            setPrevOrders(prevOrdersToDelete)
-            closeActions(index)
-        } else {
-            const newOrdersToDelete = [...newOrders]
-            const priceToSub = newOrdersToDelete[index].price
-            setTotalPrice(totalPrice - priceToSub)
-            newOrdersToDelete.splice(index, 1)
-            setNewOrders(newOrdersToDelete)
-            closeActions(index)
+        if(displayOrderType == "prev"){
+            const actionBox = document.querySelector(`#prev-${index}`)
+            console.log("actionbox is", actionBox)
+            actionBox.style.display = "flex"
+            console.log(actionBox)
+        }else if(displayOrderType == "new"){
+            const actionBox = document.querySelector(`#new-${index}`)
+            actionBox.style.display = "flex"
+            console.log(actionBox)
         }
     }
 
-    useEffect(()=>{
-        setOrderToDB(false)
-    },[prevOrders])
-    
+    function deleteOrder(index) {
+        if (displayOrderType == "prev") {
+            const prevOrdersToDelete = [...prevOrders]
+            const priceToSub = parseFloat(prevOrdersToDelete[0].price)
+            setTotalPrice(totalPrice - priceToSub)
+            prevOrdersToDelete.splice(index, 1)
+            setPrevOrders(prevOrdersToDelete)
+            closeAllActions()
+            setOrderToDB()
+        } else {
+            const newOrdersToDelete = [...newOrders]
+            const priceToSub = newOrdersToDelete.price
+            setTotalPrice(totalPrice - priceToSub)
+            newOrdersToDelete.splice(index, 1)
+            setNewOrders(newOrdersToDelete)
+            closeAllActions()
+            setOrderToDB()
+
+        }
+    }
+    function displayOrderTypeChange(display){
+        setDisplayOrderType(display)
+        closeAllActions()
+    }
     function addDescription(index) {
+        console.log(index)
 
+    }
+    function newOrdersDiv(){
+        return <><ul className={styles["order-items"]}>
+                                {newOrders.map((order, index) => (
+                                    <li key={index}>
+                                        <div className={styles["product-amount"]}>
+                                            <span>{order["amount"]}</span>
+                                        </div>
+                                        <div className={styles["order-name"]}>
+                                            <span >{order["name"]}</span>
+                                        </div>
 
+                                        <div className={styles["price"]}>
+                                            <span >{order["price"]} ₺</span>
+                                        </div>
+
+                                        <div className={styles["order-item-actions"]}>
+                                            <button onClick={() => openActions(index)}>
+                                                <i className="bi bi-three-dots"></i>
+                                            </button>
+                                        </div>
+
+                                        <div id={`new-${index}`} className={styles["order-item-actions-box"]}>
+                                            <button onClick={(index)=> addDescription(index)}>
+                                                <i className="bi bi-file-text"> </i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-percent"></i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-basket3"></i>
+                                            </button>
+                                            <button onClick={(index) => deleteOrder(index)}>
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                            <button onClick={() => closeActions(index)}>
+                                                <i className="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                        <div  className={styles["order-description"]}>
+                                            <div>
+                                                <h1>Açıklama Ekle</h1>
+                                                <div className={styles["new-description-input"]}>
+                                                    <input
+                                                        id="new-description-input"
+                                                        type="text"
+                                                        placeholder="Açıklama"
+                                                    />
+                                                    <div className={styles["action-buttons"]}>
+                                                        <div className={styles["save-new-button"]}>
+                                                            <button >Kaydet</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                            
+    }
+    function prevOrdersDiv(){
+        return <><ul className={styles["order-items"]}>
+                                {prevOrders.map((order, index) => (
+                                    <li key={index}>
+                                        <div className={styles["product-amount"]}>
+                                            <span>{order["amount"]}</span>
+                                        </div>
+                                        <div className={styles["order-name"]}>
+                                            <span >{order["name"]}</span>
+                                        </div>
+
+                                        <div className={styles["price"]}>
+                                            <span >{order["price"]} ₺</span>
+                                        </div>
+
+                                        <div className={styles["order-item-actions"]}>
+                                            <button onClick={() => openActions(index)}>
+                                                <i className="bi bi-three-dots"></i>
+                                            </button>
+                                        </div>
+
+                                        <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
+                                            <button onClick={(index)=> addDescription(index)}>
+                                                <i className="bi bi-file-text"> </i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-percent"></i>
+                                            </button>
+                                            <button>
+                                                <i className="bi bi-basket3"></i>
+                                            </button>
+                                            <button onClick={(index) => deleteOrder(index)}>
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                            <button onClick={() => closeActions(index)}>
+                                                <i className="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                        <div id={`prev-${index}`} className={styles["order-description"]}>
+                                            <div>
+                                                <h1>Açıklama Ekle</h1>
+                                                <div className={styles["new-description-input"]}>
+                                                    <input
+                                                        id="new-description-input"
+                                                        type="text"
+                                                        placeholder="Açıklama"
+                                                    />
+                                                    <div className={styles["action-buttons"]}>
+                                                        <div className={styles["save-new-button"]}>
+                                                            <button >Kaydet</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                ))}
+                            </ul>
+        </>
     }
     useEffect(() => {
         const getOrderFromDB = async () => {
@@ -117,7 +255,6 @@ function Order() {
                     setChosenCategory(object)
                     console.log("getOrdersData", getOrdersData)
                     const Index = getOrdersData.findIndex(o => o[2] === table_id)
-
                     setPrevOrders([...getOrdersData[Index][5]])
                     setTotalPrice(parseFloat(getOrdersData[Index][6]))
                     setGuestCount(getOrdersData[Index][8])
@@ -129,8 +266,8 @@ function Order() {
                 console.log(error);
             }
         };
-
         getOrderFromDB();
+        prevOrdersDiv()
     }, [table_id]);
 
     function changeCategory(e) {
@@ -188,9 +325,9 @@ function Order() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(requestBody)
-            });
+            })
             console.log("total orders,", totalOrders)
-            if (response.ok && isOrderDeleted) {
+            if (response.ok && isDelete) {
                 navigate("/tables")
             } else{
                 console.log("Bir hata oluştu:", response.statusText);
@@ -256,70 +393,16 @@ function Order() {
                     </div>
                     <div className={styles["order-list"]}>
                         <div className={styles["new-prev-orders"]}>
-                            <button onClick={() => setDisplayOrderType("new")}>Yeni Siparişler</button>
-                            <button onClick={() => setDisplayOrderType("prev")}>Eski Siparişler</button>
+                            <button onClick={() => displayOrderTypeChange("new")}>Yeni Siparişler</button>
+                            <button onClick={() => displayOrderTypeChange("prev")}>Eski Siparişler</button>
                         </div>
 
-                        <div className={styles["orders"]}>
-                            <ul className={styles["order-items"]}>
-                                {(displayOrderType === "prev" ? prevOrders : newOrders).map((order, index) => (
-                                    <li key={index}>
-                                        <div className={styles["product-amount"]}>
-                                            <span>{order["amount"]}</span>
-                                        </div>
-                                        <div className={styles["order-name"]}>
-                                            <span >{order["name"]}</span>
-                                        </div>
+                    
+                    <div className={styles["orders"]}>
+                        {(displayOrderType === "prev" ? prevOrdersDiv() : newOrdersDiv())}
+                    </div>
+                    
 
-                                        <div className={styles["price"]}>
-                                            <span >{order["price"]} ₺</span>
-                                        </div>
-
-                                        <div className={styles["order-item-actions"]}>
-                                            <button onClick={() => openActions(index)}>
-                                                <i className="bi bi-three-dots"></i>
-                                            </button>
-                                        </div>
-
-                                        <div className={styles["order-item-actions-box"]}>
-                                            <button>
-                                                <i className="bi bi-file-text"> </i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-percent"></i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-basket3"></i>
-                                            </button>
-                                            <button onClick={() => deleteOrder(index)}>
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                            <button onClick={() => closeActions(index)}>
-                                                <i className="bi bi-x-circle"></i>
-                                            </button>
-                                        </div>
-                                        <div className={styles["order-description"]}>
-                                            <div>
-                                                <h1>Açıklama Ekle</h1>
-                                                <div className={styles["new-description-input"]}>
-                                                    <input
-                                                        id="new-description-input"
-                                                        type="text"
-                                                        placeholder="Açıklama"
-                                                    />
-                                                    <div className={styles["action-buttons"]}>
-                                                        <div className={styles["save-new-button"]}>
-                                                            <button >Kaydet</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
                     </div>
                     <div className={styles["order-summary"]}>
                         <div className={styles["order-details"]}>
