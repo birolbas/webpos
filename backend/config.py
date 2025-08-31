@@ -8,7 +8,7 @@ conn = psycopg2.connect(
     host="localhost",
     dbname="restowebpos",
     user="postgres",
-    password="1",
+    password="kedi7beni",
     port=5432,
 )
 

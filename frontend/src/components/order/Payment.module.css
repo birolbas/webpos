@@ -1,140 +1,111 @@
-
 .container{
-    display: grid;
-    grid-template-rows: 85% 15%;
-    height: 100vh;
-    overflow: hidden;
+    background-color: white;
+    height: 100vh;    display: flex;
+    flex-direction: column;
 }
-.table-orders{
+.top-bar{
     display: grid;
-    grid-template-columns: .75fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.go-back-table-name{
+    display: flex;
+    padding: 1rem;
+}
+.payments{
+    margin: auto;
+}
+.payments h1{
+    text-align: center;
+    font-weight: 700;
+}
+.middle-bar{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    flex: 1;
 }
 .orders{
-    margin: 10px;
-    overflow-y: scroll;
-}
-.table-species{
-    color: white;
     display: flex;
     flex-direction: column;
-    background-color: #1a1a24;
-    overflow-y: scroll;
-    max-height: calc(100vh);
-
-}
-.table-species p{    
-    color: white;
-    font-weight: bold;
-}
-#table-id{
-    margin: 1rem 0rem 0rem 1rem;
-    font-size: 30px;
-}
-.table-id-go-back{
-    display: flex;
-    flex-direction: row;
-}
-
-.payment-input{
-    display: flex;
-    flex-direction: column;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    background-color: #1a1a24;
-    text-align: center;
-    color:white;
-
 }
 .order{
-    font-size: 20px;
-    background-color: #272736;
     display: flex;
-    margin-bottom: 1rem;
-    color: white;
-    border-left: 0px;
-    padding:0rem 1rem 0rem 1rem;
+    padding: 1rem 2rem;
+    justify-content: space-between;
+
 }
-.order-name-amount{
-    margin-right: auto;
-    justify-content: center;
+.go-back button i {
+    background-color: white;
+}
+.order-first-col{
+
+}
+.order-name{
+    font-weight: 600;
+}
+.order-amount{
+    color: rgb(107 114 128);
 }
 .order-price{
-    margin-top: auto;
-    margin-bottom: auto;
+    color: rgb(107 114 128);
 }
-.price-data{
-    display: grid;
-    grid-template-columns: .75fr 1fr 1fr;
-    color: white;
-    text-align: center;
-
-}
-.price{
-    background-color: #16161f;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.price p{
-    margin-bottom: 0px;
-    font-size: 20px;
-}
-.price p{
-    margin: 0px;
-}
-.payment-input-price{
-    margin-left: 1rem;
+.payment-inputs{
     height: 10%;
+    padding: 1rem 4rem;
 }
-.payment-input-price p{
-    font-size: 30px;
-    margin-top: 1rem;    
-    float: left;
-    margin-bottom: 1rem;
+.price-input{
+    border: 2px solid aquamarine;
+    border-radius: 16px;
 }
-.payment-input-buttons {
+.price-input h1{
     display: flex;
-    flex-direction: column;
-    width: 100%;
-    margin-left: 1rem;
+    justify-content: end;
+    margin-right: 1rem;
 }
-.payment-input-buttons button{
-    font-size: 20px;
-    font-weight: bold;
+.input-buttons{
 }
-.payment-input-button button{
-    float: left;
-}
-.payment-type{
+.input-button-row{
     display: flex;
-    margin: .5rem 1rem 0rem 1rem;
+    gap: 0.5rem;
+    margin: 0.5rem;
 }
-.payment-type button{
-    width: 50%;
-    border-radius: 0px;
-    font-size: 20px;
-    font-weight: bolder;
-}
-.payments{    
-    margin-left: 1rem;
+.calculator-button{
+    width: 25%;
     text-align: center;
-    color: white;    
-    background-color: #1a1a24;
-    overflow-y: scroll;
-    max-height: calc(100vh);
-    padding: 0px;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 0.5rem;
 }
-.payment-container{
-    display: flex;
-    flex-direction: column;
-    overflow-y: scroll;
+.calculator-button button{
+    font-size: 1.5rem;
+    font-weight: 700;
 }
-.payment{
-    display: flex;
-    justify-content: space-around;
-    font-size: 20px;
-    margin: 0rem 1rem 1rem 1rem;
-    border-radius: 15px;
-    background-color: #272736;
-
+.payment-methods{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px; 
+}
+.method{
+    width: 100%;
+    text-align: center;
+    border: 1px solid rgb(209 213 219);
+    background-color: orange;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    color: white;
+}
+.total-price span{
+    color: #16A34A;
+}
+.payed-price span{
+    color: #CA8A04;
+}
+.remaining-price span{
+    color: #DC2626;
+}
+.payment-prices{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    text-align: center;
+    padding: 1rem;
+    color: #111827;
+    font-weight: 700
 }

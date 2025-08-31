@@ -208,7 +208,6 @@ function TableSettings() {
         plusButton = plusButton.querySelector("button");
         const tableName = plusButton.innerHTML;
         const floorName = floorData.Name;
-
         const updatedFloors = floors.map(floor => {
             if (floor.Name === floorName) {
                 const newTables = floor.tables.filter(table => table.tableName !== tableName);

@@ -115,7 +115,7 @@ def set_products():
     except:
         print("error")
     else:
-        create_products = """INSERT INTO products
+        create_products = """INSERT INTO products (restaurantName, products)
                              VALUES (%s, %s)                            
                             """
         cur.execute(create_products, (restaurantName, products))
@@ -192,6 +192,7 @@ def income():
     day = request.get_json()
     print(f"{day} is the day")
     if len(day)==10:
+        print(f"{day} is the day")
         singleday_income_script = """ SELECT  restaurant_name,table_id, openningdate, products, total_price, payments, closing_date, guest_count, openningtime
                                     FROM closed_checks
                                     where closing_date = %s
@@ -206,7 +207,7 @@ def income():
         cur.execute(singleday_income_script, values)
         data = cur.fetchall()
     else :
-        print(day)
+        print("day is", day)
         singleday_income_script = """ SELECT  restaurant_name,table_id, openningdate, products, total_price, payments, closing_date, guest_count, openningtime
                                     FROM closed_checks
                                     where  closing_date > %s  AND closing_date <= %s
@@ -222,5 +223,16 @@ def income():
         print(f"data is {data}")
 
     return data
+
+@app.route("/customerSettings", methods=["GET"])
+def customerSettings():
+    cur = conn.cursor()
+    script = """select * from customer_settings"""
+    cur.execute(script)
+    data = cur.fetchall()
+    print(data)
+
+    return data
+
 if __name__ == "__main__":
     app.run(debug=True) 

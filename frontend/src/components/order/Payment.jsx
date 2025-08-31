@@ -4,9 +4,10 @@ import staticStyles from "../staticStyle/StaticStyle.module.css"
 import { useEffect, useState } from "react";
 function Payment() {
     const { table_id } = useParams();
+    const [paymentMethods, setPaymentMethods] = useState()
     const [orders, setTotalOrders] = useState()
     const [totalPrice, setTotalPrice] = useState()
-    const [moneyInput, setMoneyInput] = useState("0")
+    const [moneyInput, setMoneyInput] = useState("0.00")
     const [payments, setPayments] = useState([])
     const [payedPrice, setPayedPrice] = useState(0)
     const [remainingPrice, setRemainingPrice] = useState(0)
@@ -41,6 +42,9 @@ function Payment() {
         };
 
         getOrderFromDB();
+        const paymentMet = JSON.parse(localStorage.getItem("PaymentMethods"))
+        console.log("paymentmet", paymentMet)
+        setPaymentMethods(paymentMet)
     }, [table_id])
 
     useEffect(() => {
@@ -54,11 +58,12 @@ function Payment() {
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        
+
         return `${year}-${month}-${day}`;
     }
     function setPayment(e) {
-        const paymentType = (e.target.textContent)
+        const paymentType = (e.target.textContent.trim())
+        console.log(paymentType.length)
         let pPrice = parseFloat(payedPrice)
         let mInput = parseFloat(moneyInput)
         if (mInput < remainingPrice && mInput > 0) {
@@ -75,6 +80,7 @@ function Payment() {
 
             const updatedPayments = [...payments, object];
             console.log("updatedPayments", updatedPayments)
+            console.log("object.paymentType", object.paymentType.length)
             const nav = false
             setPaymentToDB(updatedPayments, nav)
 
@@ -84,6 +90,7 @@ function Payment() {
                 paymentType: paymentType,
                 payedPrice: remainingPrice,
             }
+            console.log("object.paymentType", object.paymentType.length)
             setRemainingPrice(0)
             setPayedPrice(parseFloat(totalPrice))
             const updatedPayments = [...payments, object];
@@ -145,107 +152,131 @@ function Payment() {
     }, [payments])
 
     function paymentInputChange(e) {
-        const price = e.target.textContent
-        if (moneyInput == 0) {
-            setMoneyInput(price)
-        } else {
-            let money = moneyInput
-            money += price
-            setMoneyInput(money)
-        }
+        var digit = e.target.textContent;
+        setMoneyInput(prev => {
+            let raw = prev.replace(".", "").replace(/^0+/, ""); 
+            console.log("raw", raw)
+            raw += digit; 
+            console.log("raw", raw)
+            let num = parseFloat(raw) / 100; 
+            console.log("num", num)
+            return num.toFixed(2);
+        });
+    
     }
     return (
         <div className={style["container"]}>
-            <div className={style["table-orders"]}>
-                <div className={style["table-species"]}>
-                    <div className={style["table-id-go-back"]}>
-                        <div style={{marginLeft:16, marginTop:16}} className={staticStyles["go-back-button"]}>
-                            <button id="go-back-button" onClick={() => navigate(-1)}>
-                                <i className="bi bi-arrow-return-left"></i>
-                            </button>
-                        </div>
-                        <p id={style["table-id"]}>Masa:{table_id}</p>
-                    </div>
+            <div className={style["top-bar"]}>
+                <div className={style["go-back-table-name"]}>
+                    <div className={style["go-back"]} style={{ display: "flex" }} >                        
+                        <button onClick={() => navigate(-1)}>
+                            <i className="bi bi-arrow-left"></i>
+                        </button>
 
-                    <div className={style["orders"]}>
-                        {orders?.map((order, index) => (
-                            <div className={style["order"]} >
-                                <div className={style["order-name-amount"]}>
-                                    <p>{order.name}</p>
-                                    <p>Miktar:{order.amount}</p>
-                                </div>
-                                <div className={style["order-price"]}>
-                                    <p>Toplam:{order.price}</p>
-                                </div>
-                            </div>
-                        ))}
+                        <h1>Masa: {table_id} </h1>
                     </div>
                 </div>
-
                 <div className={style["payments"]}>
-                    <h1>ÖDEMELER</h1>
-                    <div className={style["payment-container"]}>
-                        {payments?.map((payment, _) => (
-                            <div className={style["payment"]}>
-                                <p>{payment.paymentType}</p>
-                                <p>{payment.payedPrice}</p>
+                    <h1>Ödemeler</h1>
+                </div>
+            </div>
+            <div className={style["middle-bar"]}>
+                <div className={style["orders"]}>
+                    {orders?.map((order, index) => (
+                        <div className={style["order"]}>
+                            <div className={style["order-first-col"]}>
+                                <div className={style["order-name"]}>
+                                    {order.name}
+                                </div>
+                                <div className={style["order-amount"]}>
+                                    Miktar:{order.amount}
+                                </div>
+                            </div>
+                            <div className={style["order-price"]}>
+                                Toplam:{order.price}₺
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div></div>
+                <div className={style["payment-inputs"]}>
+                    <div className={style["price-input"]}>
+                        <h1> {moneyInput} </h1>
+                    </div>
+                    <div className={style["input-buttons"]}>
+                        <div className={style["input-button-row"]}>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>C</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>1/2</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>1/3</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>1/4</button>
+                            </div>                            
+                        </div>
+                        <div className={style["input-button-row"]}>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>7</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>8</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>9</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button>1/X</button>
+                            </div>                            
+                        </div>   
+                        <div className={style["input-button-row"]}>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>4</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>5</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>6</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>0</button>
+                            </div>                            
+                        </div>     
+                        <div className={style["input-button-row"]}>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>1</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>2</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>3</button>
+                            </div>
+                            <div className={style["calculator-button"]}>
+                                <button onClick={(e) => paymentInputChange(e)}>00</button>
+                            </div>                            
+                        </div>                                                               
+                    </div>
+                    <div className={style["payment-methods"]}>
+                        {paymentMethods?.map((method, index)=>(
+                            <div onClick={(e) => setPayment(e)} style={{ backgroundColor: "brown" }} className={style["method"]}>
+                                    {method.name}
                             </div>
                         ))}
                     </div>
                 </div>
-
-
-                <div className={style["payment-input"]}>
-                    <div className={style["payment-input-price"]}>
-                        <p>{moneyInput}<span>₺</span></p>
-                    </div>
-                    <div className={style["payment-input-buttons"]}>
-                        <div className={style["payment-input-button"]}>
-                            <button onClick={(e) => paymentInputChange(e)}>1</button>
-                            <button onClick={(e) => paymentInputChange(e)}>2</button>
-                            <button onClick={(e) => paymentInputChange(e)}>3</button>
-                            <button onClick={(e) => paymentInputChange(e)}>00</button>
-                        </div>
-                        <div className={style["payment-input-button"]}>
-                            <button onClick={(e) => paymentInputChange(e)}>4</button>
-                            <button onClick={(e) => paymentInputChange(e)}>5</button>
-                            <button onClick={(e) => paymentInputChange(e)}>6</button>
-                            <button onClick={(e) => paymentInputChange(e)}>0</button>
-                        </div>
-                        <div className={style["payment-input-button"]}>
-                            <button onClick={(e) => paymentInputChange(e)}>7</button>
-                            <button onClick={(e) => paymentInputChange(e)}>8</button>
-                            <button onClick={(e) => paymentInputChange(e)}>9</button>
-                            <button onClick={(e) => paymentInputChange(e)}>.</button>
-                        </div>
-                    </div>
-                    <div className={style["payment-type"]}>
-                        <button onClick={(e) => setPayment(e)} style={{ backgroundColor: "brown" }}>Kredi Kartı</button>
-                        <button onClick={(e) => setPayment(e)} style={{ backgroundColor: "green" }}>Nakit</button>
-                    </div>
-                </div>
-
-
             </div>
-
-
-
-            <div className={style["price-data"]}>
-                <div className={style["price"]}>
-                    <p>Toplam Tutar</p>
-                    <p>{totalPrice}<span>₺</span></p>
+            <footer>
+                <div className={style["payment-prices"]}>
+                    <div className={style["total-price"]}>Toplam Tutar: <span>{totalPrice}₺</span></div>
+                    <div className={style["payed-price"]}>Ödenen Tutar: <span>{payedPrice}₺</span></div>
+                    <div className={style["remaining-price"]}>Kalan Tutar: <span>{remainingPrice}₺</span></div>
                 </div>
-                <div className={style["price"]}>
-                    <p>Ödenen Tutar</p>
-                    <p>{payedPrice}<span>₺</span></p>
-
-                </div>
-                <div className={style["price"]}>
-                    <p>Kalan Tutar</p>
-                    <p>{remainingPrice}<span>₺</span></p>
-
-                </div>
-            </div>
+            </footer>
 
         </div>
 

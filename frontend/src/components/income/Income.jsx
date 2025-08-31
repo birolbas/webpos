@@ -9,6 +9,7 @@ import 'react-calendar/dist/Calendar.css'
 
 function Income() {
     const navigate = useNavigate()
+    const [paymentMethods, setPaymentMethods] = useState(JSON.parse(localStorage.getItem("PaymentMethods")))
     const [payments, setPayments] = useState({
         "Kredi Kartı": 0,
         "Nakit": 0,
@@ -29,16 +30,14 @@ function Income() {
         date[0] = date[0].toISOString().slice(0, 10)
         date[1] = date[1].toISOString().slice(0, 10)
         setDate([date[0], date[1]])
-
     }
 
     useEffect(()=>{
         console.log(date)
     },[date])
 
-    const getDailyFromDB = async (date) => {
-
-        console.log("date is",date)
+    const getDailyFromDB = async (date) => {    
+        console.log("date is",date) 
         try {
             const response = await fetch("http://localhost:5000/income", {
                 method: "POST",
@@ -50,19 +49,20 @@ function Income() {
             })
             if (response.ok) {
                 const data = await response.json()
-                console.log(data)
+                console.log("data",data)
                 const pTypes = {
-                    "Kredi Kartı": 0,
-                    "Nakit": 0,
-                    "Total": 0,
+                    "Payment Methods":paymentMethods,
                     "Average per Person": 0,
                     "Guest Count": 0,
                     "Peak Hours": [],
                     "Open Total": 0,
-                    "Closed Total": 0
+                    "Closed Total": 0,
+                    "Total":0
                 }
-                console.log()
-                console.log("data is ", data)
+                pTypes["Payment Methods"].forEach((type, index)=>{
+                    type["Total"] = 0
+                })
+                console.log("pTypes",pTypes["Payment Methods"])
                 data.forEach((check, index) => {
                     pTypes["Guest Count"] += parseInt(check[7])
                     const time = (check[8])
@@ -88,27 +88,38 @@ function Income() {
 
                     if (check[5]?.length) {
                         check[5].forEach((payment, _) => {
+                            console.log("payment",payment)
                             const paymentType = payment.paymentType
-                            console.log("asdfasdfasdf", payment.payedPrice)
-                            pTypes[paymentType] += parseFloat(payment.payedPrice)
+                            const index = pTypes["Payment Methods"].findIndex(p => p.name == paymentType)
+                            pTypes["Payment Methods"][index].Total += parseFloat(payment.payedPrice)
                             pTypes["Total"] += parseFloat(payment.payedPrice)
+
                         })
                     } else {
                         pTypes["Total"] += parseFloat(data[index][4])
+                        console.log("TOTALTALATTA",data[index])
+                        
                     }
                 })
                 if ((pTypes["Guest Count"]) == 0) {
                     pTypes['Average Check'] = pTypes["Total"]
                 } else {
-                    pTypes['Average Check'] = (pTypes["Total"] / pTypes["Guest Count"]).toFixed(2)
+                    pTypes['Average Check'] = (parseFloat(pTypes["Total"]) / parseFloat(pTypes["Guest Count"])).toFixed(2)
+
+
                 }
                 if (isNaN(pTypes["Average per Person"]) === true) {
                     pTypes["Average per Person"] = 0
                 }
-                console.log(pTypes["Guest Count"])
-                pTypes["Open Total"] = pTypes["Total"] - pTypes["Kredi Kartı"] - pTypes["Nakit"]
-                pTypes["Closed Total"] = pTypes["Total"] - pTypes["Open Total"] 
-
+                console.log("total",pTypes["Total"])
+                console.log("open total",pTypes["Open Total"])
+                console.log("closed total", pTypes["Closed Total"])
+                let closedSum = 0
+                pTypes["Payment Methods"].forEach((method,_)=>{
+                    closedSum += parseFloat(method.Total)
+                })
+                pTypes["Closed Total"] = closedSum
+                pTypes["Open Total"] = parseFloat(pTypes["Total"]) - closedSum
                 setPayments(pTypes)
                 console.log("peak saatler", pTypes["Peak Hours"])
                 if(pTypes["Peak Hours"].length > 0){
@@ -117,7 +128,6 @@ function Income() {
                 )
                 setPeakHour(peak)
                 }
-
             }
         }
         catch (error) {
@@ -135,7 +145,15 @@ function Income() {
         getDailyFromDB(date);
     }, [])
 
-
+    function displayMonthlyIncome(){
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = "01"
+        const date2 = `${year}-${month}-${day}`;
+        console.log([date2, date])
+        getDailyFromDB([date2, date]);
+    }
 
     return (
         <div style={{ overflow: "auto" }} className={staticStyles["containers"]}>
@@ -161,11 +179,6 @@ function Income() {
                             <p className={styles["summary-headers"]}>Toplam Müşteri</p>
                             <p className={styles["summary-data"]}>{payments["Guest Count"]} Kişi</p>
                             <p className={styles["last-week-comp"]}>
-                                <svg style={{ marginRight: "5px" }} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trending-up w-4 h-4 text-green-400 mr-1"
-                                ><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>
-                                </svg>
-                                +135₺
                             </p>
                         </div>
                     </div>
@@ -174,11 +187,7 @@ function Income() {
                             <p className={styles["summary-headers"]}>Müşteri Başına Ortalama</p>
                             <p className={styles["summary-data"]}>{payments["Average Check"]}₺</p>
                             <p className={styles["last-week-comp"]}>
-                                <svg style={{ marginRight: "5px" }} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trending-up w-4 h-4 text-green-400 mr-1"
-                                ><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>
-                                </svg>
-                                +135₺
+
                             </p>
                         </div>
                         <div className={styles["summary"]}>
@@ -192,21 +201,20 @@ function Income() {
                 <div className={styles["payment-methods"]}>
                     <div className={`${styles["method"]} ${styles["summary-headers"]}`}>
                         <p className={styles["summary-headers"]}>Ödeme Şekilleri</p>
-                        <div className={styles["payment-method"]}>
-                            <p>Kredi Kartı</p>
-                            <p className={styles["payment-amount"]}>{payments['Kredi Kartı']}₺</p>
-                        </div>
-                        <div className={styles["payment-method"]}>
-                            <p>Nakit</p>
-                            <p className={styles["payment-amount"]}>{payments['Nakit']}₺</p>
-                        </div>
+                        {paymentMethods.map((method,index)=>(
+                            <div className={styles["payment-method"]}>
+                                <p>{method.name}</p>
+                                <p className={styles["payment-amount"]}>{method.Total}₺</p>
+                            </div>
+                        ))}
+
                     </div>
                 </div>
 
                 <div className={styles["action-buttons-container"]}>
                     <div className={styles["action-buttons"]}>
-                        <button onClick={() => (displayCalendar())} style={{ backgroundColor: "green" }}>Tarih Seç</button>
-                        <button style={{ backgroundColor: "red" }}>Aylık</button>
+                        <button onClick={() => displayCalendar()} style={{ backgroundColor: "green" }}>Tarih Seç</button>
+                        <button onClick={() => displayMonthlyIncome()} style={{ backgroundColor: "red" }}>Aylık</button>
                     </div>
                     <div className={styles["action-buttons"]}>
                         <button style={{ backgroundColor: "blue" }}>Detaylı Rapor</button>

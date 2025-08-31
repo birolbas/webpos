@@ -1,6 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css"
 import { useState, useEffect } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useFetcher, useLocation, useNavigate } from "react-router-dom"
 import { Link } from 'react-router-dom';
 import Order from '../order/Order'
 import Settings from "../settings/Settings"
@@ -8,6 +8,7 @@ import staticStyles from '../staticStyle/StaticStyle.module.css'
 import tablesStyle from './Tables.module.css'
 import Clock from "../staticStyle/Clock"
 import LeftBar from "../staticStyle/LeftBar"
+
 function Tables() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -21,40 +22,30 @@ function Tables() {
     const [col, setCol] = useState()
     const [tablePricing, setTablePricing] = useState([])
 
-    const getTables = async () => {
-        try {
-            const tableGridData = await fetch("http://127.0.0.1:5000/table_grid")
-            const tablePriceData = await fetch("http://127.0.0.1:5000/get_orders")
-            if (tableGridData.ok) {
-                const gridData = await tableGridData.json()
-                const priceData = await tablePriceData.json()
-                console.log("tablePriceData",priceData)
-                const table_prices = []
-                priceData.forEach((data,index)=>{
-                    const object = {
-                        table_name:data[2],
-                        table_price:data[6]
-                    }
-                    table_prices.push(object)
-                })
-                console.log("tablepricing",table_prices)
-                setTablePricing(table_prices)
-                setFloors(gridData)
-                setChosenFloor(gridData[0])
-                setRow(gridData[0][1])
-                setCol(gridData[0][2])
-                const table = []
-                gridData.forEach((data, _) => {
-                    const floorTables = data[3]
+
+    async function getTables(){
+        const data = JSON.parse(localStorage.getItem("TableLayout"))
+        console.log("GELEN MASA BİLGİLERİ", data)
+        const tablePriceData = await fetch("http://127.0.0.1:5000/get_orders")
+        const table_prices = await tablePriceData.json()
+        console.log("tables prices", table_prices)
+        setTablePricing(table_prices)
+        setChosenFloor(data[0])
+        setCol(data[0].gridCol)
+        setRow(data[0].gridrow)
+        setFloors(data)
+         const table = []
+                data.forEach((data, _) => {
+                    const floorTables = data.tables
                     floorTables.forEach((item, _) => {
-                        const existingIndex = table_prices.findIndex(pData => pData.table_name === item.tableName)
+                        const existingIndex = table_prices.findIndex(pData => pData[2] === item.tableName)
                         if (existingIndex !== -1) {
                             const object = {
                                 floorName: data[0],
                                 tableName: item.tableName,
                                 tableGridCol: item.tableGridCol,
                                 tableGridRow: item.tableGridRow,
-                                tablePrice: table_prices[existingIndex].table_price,
+                                tablePrice: table_prices[existingIndex][6],
                                 isCheckOpen: true
                             }
                             table.push(object)
@@ -72,14 +63,8 @@ function Tables() {
                     })
                 })
                 setTables(table)
-
-            } else {
-                console.log("error happened", tableGridData.statusText)
-            }
-        } catch (error) {
-            console.log(error)
-        }
     }
+    
 
     function changeFloor(e) {
         const floorName = e.target.textContent
@@ -93,7 +78,7 @@ function Tables() {
         floors[index][3].forEach((data, _) => {
                 console.log("datatablename",data.tableName)
                 console.log("tablePricing",tablePricing)
-                const existingIndex = tablePricing.findIndex(pData => pData.table_name === data.tableName)
+                const existingIndex = tablePricing.findIndex(pData => pData[2] === data.tableName)
                 console.log("existing index",existingIndex)
                 console.log("data budur",data)
                 if (existingIndex !== -1) {
@@ -102,7 +87,7 @@ function Tables() {
                         tableName: data.tableName,
                         tableGridCol: data.tableGridCol,
                         tableGridRow: data.tableGridRow,
-                        tablePrice: tablePricing[existingIndex].table_price,
+                        tablePrice: tablePricing[existingIndex][6],
                         isCheckOpen: true
                     }
                     table.push(object)
@@ -119,21 +104,16 @@ function Tables() {
                     table.push(object)
                 }
         })
-        console.log("tables",table)
         setTables(table)
         setIsFloors(false)
     }
 
     useEffect(() => {
         getTables()
-        
     }, [])
-    useEffect(()=>{
-        console.log("tables are", tables)
-    },[tables])
 
     useEffect(() => {
-        getTables();
+        getTables()
     }, [location]);
 
     useEffect(() => {
@@ -142,6 +122,10 @@ function Tables() {
         style.style.gridTemplateRows = `repeat(${row},1fr)`
     }, [col, row])
 
+    useEffect(()=>{
+        console.log("floors are", floors[0]?.Name)
+        console.log("chosenfloor", chosenFloor.Name)
+    },[floors])
 
     useEffect(() => {
         const chosenFloorTables = []
@@ -184,7 +168,7 @@ function Tables() {
                             </div>
                         </div>
                         <div className={tablesStyle["floors"]}>
-                            <button onClick={() => setIsFloors(!isFloors)}>{chosenFloor[0]}</button>
+                            <button onClick={() => setIsFloors(!isFloors)}>{chosenFloor?.Name}</button>
                             <div className={tablesStyle["floor-choose"]}>
                                 {floors.map((floor, _) => {
                                     if (floor[0] !== chosenFloor[0]) {
@@ -207,7 +191,8 @@ function Tables() {
                                     style={{
                                         backgroundColor: table.isCheckOpen ? "aquamarine" : "",
                                         gridColumnStart: table.tableGridCol,
-                                        gridRowStart: table.tableGridRow
+                                        gridRowStart: table.tableGridRow,
+                                        color: table.isCheckOpen ? "white" : "",
                                     }}>
                                     <div className={tablesStyle['table-species']}>
                                         <span className={tablesStyle['table-id']}>{table.tableName}</span>{" "}

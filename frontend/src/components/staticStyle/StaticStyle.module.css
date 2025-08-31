@@ -1,8 +1,9 @@
 body {
-    background-color: #272736;
+    background-color: white;
     height: 100vh;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 .containers {
@@ -10,6 +11,7 @@ body {
     width: 100%;
     display: flex;
     overflow: hidden;
+    background-color: white;
 }
 
 .left-bar-items {
@@ -69,7 +71,7 @@ body {
 }
 
 .go-back-button button{
-    background-color: #2a2a35;
+    background-color: white;
     color: white;
     margin: 0px 10px 0px 0px;
 }
@@ -85,15 +87,17 @@ body {
     height: 100vh;
     margin-left: 1rem;
     margin-right: 1rem;
+    background-color: rgb(255, 255, 255);
 }
 
 .middle-bar-top-bar {
     display: flex;
     align-items: center;
     padding: 1rem;
-    background-color: #1a1a24;
-    margin-bottom: 1rem;
+    background-color: white;
     height: 10%;
+    color: black;
+    font-weight: 700;
 }
 
 .middle-bar p {
@@ -127,7 +131,7 @@ body {
 }
 
 .menu-items {
-    background-color: #1a1a24;
+    background-color: white;
     border-radius: 10px;
     height: calc(100% - 80px);
     overflow: hidden;

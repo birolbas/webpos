@@ -6,8 +6,9 @@
 }
 
 i{
-    background-color: #272736;
+    background-color: white;
     font-size: 30px;
+    color: black;
 }
 button{
     width: 60px;

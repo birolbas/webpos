@@ -21,7 +21,104 @@ function Order() {
     const [productCategory, setProductCategory] = useState([])
     const [products, setProducts] = useState([])
     const [chosenCategory, setChosenCategory] = useState([])
+    const [chosenSubCategory, setChosenSubCategory] = useState()
     const [guestCount, setGuestCount] = useState(0)
+    const [isDelete, setIsDelete] = useState(false)
+    const [descriptionText, setDescriptionText] = useState("")
+    const [isLoading, setIsLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState("")
+
+        useEffect(() => {
+        const getOrderFromDB = async () => {
+            try {
+                console.log("table id is ", table_id)
+                const getOrdersResponse = await fetch("http://127.0.0.1:5000/get_orders");
+                if (getOrdersResponse.ok) {
+                    const getOrdersData = await getOrdersResponse.json();
+                    const Index = getOrdersData.findIndex(o => o[2] === table_id)
+                    setPrevOrders([...getOrdersData[Index][5]])
+                    setTotalPrice(parseFloat(getOrdersData[Index][6]))
+                    setGuestCount(getOrdersData[Index][8])
+
+                } else {
+                    console.log("error happened", getOrdersResponse.statusText);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        };
+        getOrderFromDB();
+        prevOrdersDiv()
+    }, [table_id]);
+
+    const onMount = () => {
+        try {
+            const staticCategory = JSON.parse(localStorage.getItem("Menu"))
+            const staticProducts = JSON.parse(localStorage.getItem("Products"))
+            
+            if (!staticCategory || !staticProducts) {
+                console.error("Menu or Products data not found in localStorage")
+                setIsLoading(false)
+                return
+            }
+            
+            console.log("staticProducts", staticProducts)
+            console.log(staticCategory[0].categoryName)
+            const tempCategories = []
+            console.log("categories", staticCategory)
+
+            staticCategory.forEach((item, index) => {
+                const category = item.categoryName
+                const subCategoryProducts = []
+                if (item.subCategories) {
+                    item.subCategories.forEach((sub, index) => {
+                        const product = staticProducts.filter(p => p.category === sub)
+                        const subCateAndProducts = {
+                            subCategoryName: sub,
+                            products: product
+                        }
+                        console.log("obje", subCateAndProducts)
+                        subCategoryProducts.push(subCateAndProducts)
+                    })
+                    const object = {
+                        category: item.categoryName,
+                        subCategories: subCategoryProducts,
+                    }
+                    tempCategories.push(object)
+                } else {
+                    const product = staticProducts.filter(p => p.category === item.categoryName)
+                    const object = {
+                        category: item.categoryName,
+                        subCategories: [],
+                        products: product
+                    }
+                    tempCategories.push(object)
+                }
+            })
+            console.log("asd", tempCategories)
+            setProductCategory(tempCategories)
+            if (tempCategories.length > 0) {
+                setChosenCategory(tempCategories[0])
+                if (tempCategories[0].subCategories && tempCategories[0].subCategories.length > 0) {
+                    setChosenSubCategory(tempCategories[0].subCategories[0])
+                    setProducts(tempCategories[0].subCategories[0].products)
+                } else if (tempCategories[0].products) {
+                    setProducts(tempCategories[0].products)
+                }
+            }
+        } catch (error) {
+            console.error("Error loading menu data:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        onMount()
+    }, [])
+    useEffect(() => {
+        console.log(chosenSubCategory)
+    }, [chosenSubCategory])
     function appendOrder(event) {
         setDisplayOrderType("new");
         const productName = event.currentTarget.querySelector('#product-name').textContent;
@@ -47,54 +144,59 @@ function Order() {
         setTotalPrice(newTotalPrice);
     }
     function closeActions(index) {
-        if(displayOrderType == "prev"){
+        if (displayOrderType == "prev") {
             const actionBox = document.querySelector(`#prev-${index}`)
             actionBox.style.display = "none"
             console.log(actionBox)
         }
     }
-    function closeAllActions(){
+    function closeAllActions() {
         const allActionBoxes = document.querySelectorAll('[id^="prev-"], [id^="new-"]');
         allActionBoxes.forEach(box => {
-        if (box.classList.contains(styles["order-item-actions-box"])) {
-            box.style.display = "none";
-        }
-    });
+            if (box.classList.contains(styles["order-item-actions-box"])) {
+                box.style.display = "none";
+            }
+        });
     }
     function openActions(index) {
-        if(displayOrderType == "prev"){
+        if (displayOrderType == "prev") {
             const actionBox = document.querySelector(`#prev-${index}`)
             console.log("actionbox is", actionBox)
             actionBox.style.display = "flex"
             console.log(actionBox)
-        }else if(displayOrderType == "new"){
+        } else if (displayOrderType == "new") {
             const actionBox = document.querySelector(`#new-${index}`)
             actionBox.style.display = "flex"
             console.log(actionBox)
         }
     }
+    useEffect(() => {
+        if (isDelete) {
+            setOrderToDB(false)
+            setIsDelete(false)
+        }
+    }, [isDelete])
 
     function deleteOrder(index) {
         if (displayOrderType == "prev") {
+            console.log(prevOrders[index])
             const prevOrdersToDelete = [...prevOrders]
             const priceToSub = parseFloat(prevOrdersToDelete[0].price)
             setTotalPrice(totalPrice - priceToSub)
             prevOrdersToDelete.splice(index, 1)
             setPrevOrders(prevOrdersToDelete)
             closeAllActions()
-            setOrderToDB()
+            setIsDelete(true)
         } else {
             const newOrdersToDelete = [...newOrders]
-            const priceToSub = newOrdersToDelete.price
+            const priceToSub = parseFloat(newOrdersToDelete[0].price)
             setTotalPrice(totalPrice - priceToSub)
             newOrdersToDelete.splice(index, 1)
             setNewOrders(newOrdersToDelete)
             closeAllActions()
-            setOrderToDB()
-
         }
     }
-    function displayOrderTypeChange(display){
+    function displayOrderTypeChange(display) {
         setDisplayOrderType(display)
         closeAllActions()
     }
@@ -102,191 +204,144 @@ function Order() {
         console.log(index)
 
     }
-    function newOrdersDiv(){
+    function newOrdersDiv() {
         return <><ul className={styles["order-items"]}>
-                                {newOrders.map((order, index) => (
-                                    <li key={index}>
-                                        <div className={styles["product-amount"]}>
-                                            <span>{order["amount"]}</span>
-                                        </div>
-                                        <div className={styles["order-name"]}>
-                                            <span >{order["name"]}</span>
-                                        </div>
+            {newOrders.map((order, index) => (
+                <li key={index}>
+                    <div className={styles["product-amount"]}>
+                        <span>{order["amount"]}</span>
+                    </div>
+                    <div className={styles["order-name"]}>
+                        <span >{order["name"]}</span>
+                    </div>
 
-                                        <div className={styles["price"]}>
-                                            <span >{order["price"]} ₺</span>
-                                        </div>
+                    <div className={styles["price"]}>
+                        <span >{order["price"]} ₺</span>
+                    </div>
 
-                                        <div className={styles["order-item-actions"]}>
-                                            <button onClick={() => openActions(index)}>
-                                                <i className="bi bi-three-dots"></i>
-                                            </button>
-                                        </div>
+                    <div className={styles["order-item-actions"]}>
+                        <button onClick={() => openActions(index)}>
+                            <i className="bi bi-three-dots"></i>
+                        </button>
+                    </div>
 
-                                        <div id={`new-${index}`} className={styles["order-item-actions-box"]}>
-                                            <button onClick={(index)=> addDescription(index)}>
-                                                <i className="bi bi-file-text"> </i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-percent"></i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-basket3"></i>
-                                            </button>
-                                            <button onClick={(index) => deleteOrder(index)}>
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                            <button onClick={() => closeActions(index)}>
-                                                <i className="bi bi-x-circle"></i>
-                                            </button>
-                                        </div>
-                                        <div  className={styles["order-description"]}>
-                                            <div>
-                                                <h1>Açıklama Ekle</h1>
-                                                <div className={styles["new-description-input"]}>
-                                                    <input
-                                                        id="new-description-input"
-                                                        type="text"
-                                                        placeholder="Açıklama"
-                                                    />
-                                                    <div className={styles["action-buttons"]}>
-                                                        <div className={styles["save-new-button"]}>
-                                                            <button >Kaydet</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <div id={`new-${index}`} className={styles["order-item-actions-box"]}>
+                        <button onClick={(index) => addDescription(index)}>
+                            <i className="bi bi-file-text"> </i>
+                        </button>
+                        <button>
+                            <i className="bi bi-percent"></i>
+                        </button>
+                        <button>
+                            <i className="bi bi-basket3"></i>
+                        </button>
+                        <button onClick={() => deleteOrder(index)}>
+                            <i className="bi bi-trash"></i>
+                        </button>
+                        <button onClick={() => closeActions(index)}>
+                            <i className="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                    <div className={styles["order-description"]}>
+                        <div>
+                            <h1>Açıklama Ekle</h1>
+                            <div className={styles["new-description-input"]}>
+                                <input
+                                    id="new-description-input"
+                                    type="text"
+                                    placeholder="Açıklama"
+                                />
+                                <div className={styles["action-buttons"]}>
+                                    <div className={styles["save-new-button"]}>
+                                        <button >Kaydet</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                            
+                </li>
+            ))}
+        </ul>
+        </>
+
     }
-    function prevOrdersDiv(){
+    function prevOrdersDiv() {
         return <><ul className={styles["order-items"]}>
-                                {prevOrders.map((order, index) => (
-                                    <li key={index}>
-                                        <div className={styles["product-amount"]}>
-                                            <span>{order["amount"]}</span>
-                                        </div>
-                                        <div className={styles["order-name"]}>
-                                            <span >{order["name"]}</span>
-                                        </div>
+            {prevOrders.map((order, index) => (
+                <li key={index}>
+                    <div className={styles["product-amount"]}>
+                        <span>{order["amount"]}</span>
+                    </div>
+                    <div className={styles["order-name"]}>
+                        <span >{order["name"]}</span>
+                    </div>
 
-                                        <div className={styles["price"]}>
-                                            <span >{order["price"]} ₺</span>
-                                        </div>
+                    <div className={styles["price"]}>
+                        <span >{order["price"]} ₺</span>
+                    </div>
 
-                                        <div className={styles["order-item-actions"]}>
-                                            <button onClick={() => openActions(index)}>
-                                                <i className="bi bi-three-dots"></i>
-                                            </button>
-                                        </div>
+                    <div className={styles["order-item-actions"]}>
+                        <button onClick={() => openActions(index)}>
+                            <i className="bi bi-three-dots"></i>
+                        </button>
+                    </div>
 
-                                        <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
-                                            <button onClick={(index)=> addDescription(index)}>
-                                                <i className="bi bi-file-text"> </i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-percent"></i>
-                                            </button>
-                                            <button>
-                                                <i className="bi bi-basket3"></i>
-                                            </button>
-                                            <button onClick={(index) => deleteOrder(index)}>
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                            <button onClick={() => closeActions(index)}>
-                                                <i className="bi bi-x-circle"></i>
-                                            </button>
-                                        </div>
-                                        <div id={`prev-${index}`} className={styles["order-description"]}>
-                                            <div>
-                                                <h1>Açıklama Ekle</h1>
-                                                <div className={styles["new-description-input"]}>
-                                                    <input
-                                                        id="new-description-input"
-                                                        type="text"
-                                                        placeholder="Açıklama"
-                                                    />
-                                                    <div className={styles["action-buttons"]}>
-                                                        <div className={styles["save-new-button"]}>
-                                                            <button >Kaydet</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
+                        <button onClick={(index) => addDescription(index)}>
+                            <i className="bi bi-file-text"> </i>
+                        </button>
+                        <button>
+                            <i className="bi bi-percent"></i>
+                        </button>
+                        <button>
+                            <i className="bi bi-basket3"></i>
+                        </button>
+                        <button onClick={() => deleteOrder(index)}>
+                            <i className="bi bi-trash"></i>
+                        </button>
+                        <button onClick={() => closeActions(index)}>
+                            <i className="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                    <div id={`prev-${index}`} className={styles["order-description"]}>
+                        <div>
+                            <h1>Açıklama Ekle</h1>
+                            <div className={styles["new-description-input"]}>
+                                <input
+                                    id="new-description-input"
+                                    type="text"
+                                    placeholder="Açıklama"
+                                />
+                                <div className={styles["action-buttons"]}>
+                                    <div className={styles["save-new-button"]}>
+                                        <button >Kaydet</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                    </li>
-                                ))}
-                            </ul>
+                </li>
+            ))}
+        </ul>
         </>
     }
-    useEffect(() => {
-        const getOrderFromDB = async () => {
-            try {
-                console.log("table id is ", table_id)
-                console.log("asdfasdfasdfasdfasdfasdf")
-                const getOrdersResponse = await fetch("http://127.0.0.1:5000/get_orders");
-                const getProductsResponse = await fetch("http://127.0.0.1:5000/get_products")
-                if (getOrdersResponse.ok && getProductsResponse.ok) {
-                    const getOrdersData = await getOrdersResponse.json();
-                    const getProductsData = await getProductsResponse.json();
-                    const productCategories = getProductsData[0][1]
-                    setProducts(getProductsData[0][1])
-                    const totalCategories = []
-                    productCategories.forEach((category, index) => {
-                        const existingIndex = totalCategories.findIndex(c => category.productCategory === c)
-                        console.log(existingIndex)
-                        if (existingIndex === -1) {
-                            totalCategories.push(productCategories[index].productCategory)
-                        }
-                    })
-                    setProductCategory(totalCategories)
-                    const chosenProducts = productCategories.filter(p => p.productCategory === totalCategories[0])
 
-                    const object = {
-                        category: totalCategories[0],
-                        products: chosenProducts,
-                    }
-                    setChosenCategory(object)
-                    console.log("getOrdersData", getOrdersData)
-                    const Index = getOrdersData.findIndex(o => o[2] === table_id)
-                    setPrevOrders([...getOrdersData[Index][5]])
-                    setTotalPrice(parseFloat(getOrdersData[Index][6]))
-                    setGuestCount(getOrdersData[Index][8])
-
-                } else {
-                    console.log("error happened", getOrdersResponse.statusText);
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        };
-        getOrderFromDB();
-        prevOrdersDiv()
-    }, [table_id]);
 
     function changeCategory(e) {
         console.log("chosenCategory", chosenCategory)
         const categoryName = e.target.textContent
-        console.log("products", products)
-        const categoryProducts = products.filter(p => p.productCategory === categoryName)
-        console.log("categoryProducts", categoryProducts)
-        const object = {
-            category: categoryName,
-            products: categoryProducts
-        }
-        setChosenCategory(object)
-
+        const index = productCategory.findIndex(p => p.category == categoryName)
+        setChosenCategory(productCategory[index])
+        setChosenSubCategory(productCategory[index].subCategories[0])
     }
 
+    useEffect(() => {
+        console.log("products", products)
+    }, [products])
 
     const setOrderToDB = async (isDelete) => {
-        const isOrderDeleted = isDelete
         const totalOrders = []
         prevOrders.forEach(prev => totalOrders.push({ ...prev }))
         newOrders.forEach(newOrder => {
@@ -329,7 +384,7 @@ function Order() {
             console.log("total orders,", totalOrders)
             if (response.ok && isDelete) {
                 navigate("/tables")
-            } else{
+            } else {
                 console.log("Bir hata oluştu:", response.statusText);
             }
         } catch (error) {
@@ -339,8 +394,19 @@ function Order() {
 
     };
     useEffect(() => {
-        console.log("productCategory", chosenCategory)
-    }, [chosenCategory])
+        console.log("chosenCategory", chosenCategory.subCategories)
+        console.log("chosenSubCategory", chosenSubCategory)
+        const index = chosenCategory?.subCategories?.findIndex(c => c.subCategoryName == chosenSubCategory)
+        chosenCategory?.subCategories?.forEach((category, index) => {
+            if (category.subCategoryName == chosenSubCategory) {
+                setProducts(category.products)
+            }
+        })
+    }, [chosenSubCategory])
+
+    useEffect(()=>{
+        setProducts(chosenCategory.subCategories?.[0].products)
+    },[chosenCategory])
 
     function routePaymentScreen() {
         if (totalPrice > 0 && prevOrders.length > 0) {
@@ -369,19 +435,49 @@ function Order() {
                 <div className={styles["menu-items"]}>
                     <div className={styles["menu-items-sections"]}>
                         {productCategory.map((category, index) => (
-                            <button onClick={(e) => changeCategory(e)}>{category}</button>
+                            <button onClick={() => setChosenCategory(productCategory[index])} > {category.category} </button>
                         ))}
 
                     </div>
+
+                    <div className={styles["sub-menu-sections"]}>
+                        {chosenCategory.subCategories?.map((category, index) => (
+                            <button onClick={() => setChosenSubCategory(category.subCategoryName)} > {category.subCategoryName} </button>
+                        ))}
+
+                    </div>
+
                     <div className={styles["products"]}>
-                        {chosenCategory.products?.map((product, _) => (
-                            <button onClick={(event) => appendOrder(event)}>
-                                <span className={styles["product-name"]} id="product-name">{product.productName}</span>
-                                <span className={styles["product-price"]} id="product-price">{product.productPrice}</span>
-                            </button>
-                        ))}
-
+                        {isLoading ? (
+                            <div className={styles["loading-state"]}>
+                                <div className={styles["loading-spinner"]}></div>
+                                <p>Menü yükleniyor...</p>
+                            </div>
+                        ) : products && products.length > 0 ? (
+                            products.map((product, index) => (
+                                <button 
+                                    key={index}
+                                    onClick={(event) => appendOrder(event)}
+                                    className={styles["product-button"]}
+                                    disabled={product.activeness !== "Active"}
+                                >
+                                    {product.activeness === "Active" ? (
+                                        <>
+                                            <span className={styles["product-name"]} id="product-name">{product.name}</span>
+                                            <span className={styles["product-price"]} id="product-price">{product.price}</span>
+                                        </>
+                                    ) : (
+                                        <span className={styles["product-disabled"]}>{product.name} (Pasif)</span>
+                                    )}
+                                </button>
+                            ))
+                        ) : (
+                            <div className={styles["no-products"]}>
+                                <p>Bu kategoride ürün bulunamadı</p>
+                            </div>
+                        )}
                     </div>
+
                 </div>
             </div>
 
@@ -393,15 +489,15 @@ function Order() {
                     </div>
                     <div className={styles["order-list"]}>
                         <div className={styles["new-prev-orders"]}>
-                            <button onClick={() => displayOrderTypeChange("new")}>Yeni Siparişler</button>
-                            <button onClick={() => displayOrderTypeChange("prev")}>Eski Siparişler</button>
+                            <button className={styles["new-orders"]} onClick={() => displayOrderTypeChange("new")}>Yeni Siparişler</button>
+                            <button className={styles["prev-orders"]} onClick={() => displayOrderTypeChange("prev")}>Eski Siparişler</button>
                         </div>
 
-                    
-                    <div className={styles["orders"]}>
-                        {(displayOrderType === "prev" ? prevOrdersDiv() : newOrdersDiv())}
-                    </div>
-                    
+
+                        <div className={styles["orders"]}>
+                            {(displayOrderType === "prev" ? prevOrdersDiv() : newOrdersDiv())}
+                        </div>
+
 
                     </div>
                     <div className={styles["order-summary"]}>
