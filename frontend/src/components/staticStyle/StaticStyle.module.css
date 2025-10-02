@@ -1,9 +1,8 @@
 body {
-    background-color: white;
+    background-color: #F3F4F6;
     height: 100vh;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
 }
 
 .containers {
@@ -11,7 +10,7 @@ body {
     width: 100%;
     display: flex;
     overflow: hidden;
-    background-color: white;
+    background-color: #F3F4F6;
 }
 
 .left-bar-items {
@@ -82,19 +81,18 @@ body {
 }
 
 .middle-bar {
-    width: 62%;
+    width: 70%;
     color: white;
     height: 100vh;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    background-color: rgb(255, 255, 255);
+    background-color: #F3F4F6;
+    padding: 1rem;
 }
 
 .middle-bar-top-bar {
     display: flex;
     align-items: center;
     padding: 1rem;
-    background-color: white;
+    background-color: #F3F4F6;
     height: 10%;
     color: black;
     font-weight: 700;

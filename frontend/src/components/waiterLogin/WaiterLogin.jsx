@@ -12,11 +12,14 @@ function WaiterLogin() {
 	async function getStaticData() {
 		const customer_settings = await customerSettings()
 		const products = await getProducts()
-		localStorage.setItem("Taxes", JSON.stringify(customer_settings[0][2]))
-		localStorage.setItem("Menu", JSON.stringify(customer_settings[0][3]))
-		localStorage.setItem("PaymentMethods", JSON.stringify(customer_settings[0][4]))
-		localStorage.setItem("TableLayout", JSON.stringify(customer_settings[0][5]))
-		localStorage.setItem("Products", JSON.stringify(products[0][2]))
+		console.log(customer_settings)
+		localStorage.setItem("Taxes", JSON.stringify(customer_settings[0].taxes))
+		localStorage.setItem("Menu", JSON.stringify(customer_settings[0].categories))
+		localStorage.setItem("PaymentMethods", JSON.stringify(customer_settings[0].paymentmethods))
+		localStorage.setItem("TableLayout", JSON.stringify(customer_settings[0].tablelayout))
+		localStorage.setItem("Products", JSON.stringify(products[0].products))
+		localStorage.setItem("ServiceCharges", JSON.stringify(customer_settings[0].servicecharges))
+		localStorage.setItem("Discounts", JSON.stringify(customer_settings[0].discounts))
 	}
 
 	useEffect(()=>{

@@ -11,23 +11,33 @@ function Payment() {
     const [payments, setPayments] = useState([])
     const [payedPrice, setPayedPrice] = useState(0)
     const [remainingPrice, setRemainingPrice] = useState(0)
+    const [zeroOnClick, setZeroOnClick] = useState(true)
     const navigate = useNavigate()
     useEffect(() => {
         const getOrderFromDB = async () => {
             try {
-                const getOrdersResponse = await fetch(`http://127.0.0.1:5000/get_payment_orders/${table_id}`);
+                const getOrdersResponse = await fetch(`http://127.0.0.1:5000/get_payment_orders/${table_id}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    }
+                })
                 if (getOrdersResponse.ok) {
                     const getOrdersData = await getOrdersResponse.json();
                     console.log("getOrdersData", getOrdersData)
-                    setTotalOrders(getOrdersData[0][5])
-                    setTotalPrice(parseFloat(getOrdersData[0][6]))
-                    setRemainingPrice(parseFloat(getOrdersData[0][6]))
+                    setTotalOrders(getOrdersData[0].products)
+                    const price = parseFloat(getOrdersData[0].total_price).toFixed(2)
+                    console.log("price", price)
+                    setTotalPrice(price)
+                    setRemainingPrice(price)
+                    setMoneyInput(price)
                     console.log(getOrdersData[0][7])
-                    if (getOrdersData[0][7]) {
-                        setPayments(getOrdersData[0][7])
+                    if (getOrdersData[0].payments) {
+                        setPayments(getOrdersData[0].payments)
                     }
                     let totalPayed = 0
-                    getOrdersData[0][7].forEach((payment, _) => {
+                    getOrdersData[0].payments.forEach((payment, _) => {
                         const price = parseFloat(payment.payedPrice)
                         totalPayed += price
                     })
@@ -50,8 +60,11 @@ function Payment() {
     useEffect(() => {
         console.log("orders", orders)
         setRemainingPrice(totalPrice - payedPrice)
-
     }, [orders])
+
+    useEffect(()=>{
+        console.log("paymentMethods",paymentMethods)
+    },[paymentMethods])
 
     function getTodayDate() {
         const now = new Date();
@@ -61,9 +74,8 @@ function Payment() {
 
         return `${year}-${month}-${day}`;
     }
-    function setPayment(e) {
-        const paymentType = (e.target.textContent.trim())
-        console.log(paymentType.length)
+    function setPayment(index) {
+        const paymentType = paymentMethods[index]
         let pPrice = parseFloat(payedPrice)
         let mInput = parseFloat(moneyInput)
         if (mInput < remainingPrice && mInput > 0) {
@@ -71,14 +83,14 @@ function Payment() {
             pPrice += mInput
             const object = {
                 paymentType: paymentType,
-                payedPrice: moneyInput,
+                payedPrice: remainingPrice,
             }
             setPayedPrice(parseFloat(pPrice))
             setRemainingPrice((totalPrice - pPrice).toFixed(2))
             setPayments([...payments, object])
-            setMoneyInput("0")
-
-            const updatedPayments = [...payments, object];
+            setMoneyInput((remainingPrice- moneyInput).toFixed(2))
+            setZeroOnClick(true)
+            const updatedPayments = [...payments, object]
             console.log("updatedPayments", updatedPayments)
             console.log("object.paymentType", object.paymentType.length)
             const nav = false
@@ -95,8 +107,9 @@ function Payment() {
             setPayedPrice(parseFloat(totalPrice))
             const updatedPayments = [...payments, object];
             setPayments(updatedPayments)
-            setPayedPrice(totalPrice)
-            setMoneyInput("0")
+            setMoneyInput(remainingPrice- moneyInput)
+            setZeroOnClick(true)
+
             const nav = true
             setPaymentToDB(updatedPayments, nav)
         }
@@ -109,6 +122,7 @@ function Payment() {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
                 },
                 body: JSON.stringify(updatedPayments)
             }
@@ -132,6 +146,7 @@ function Payment() {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
                 },
                 body: JSON.stringify(updatedPayments)
             }
@@ -147,28 +162,39 @@ function Payment() {
 
     }
     useEffect(() => {
-        console.log("orders", payments)
+        console.log("moneyInput",typeof moneyInput)
 
-    }, [payments])
+    }, [moneyInput])
 
     function paymentInputChange(e) {
         var digit = e.target.textContent;
-        setMoneyInput(prev => {
-            let raw = prev.replace(".", "").replace(/^0+/, ""); 
+        if(zeroOnClick){
+            let raw = "0.00".replace(".", "").replace(/^0+/, "");
             console.log("raw", raw)
-            raw += digit; 
+            raw += digit;
             console.log("raw", raw)
-            let num = parseFloat(raw) / 100; 
+            let num = parseFloat(raw) / 100;
             console.log("num", num)
-            return num.toFixed(2);
-        });
-    
+            setMoneyInput(num.toFixed(2))
+            setZeroOnClick(false)
+        }else{
+            setMoneyInput(prev => {
+                let raw = prev.replace(".", "").replace(/^0+/, "");
+                console.log("raw", raw)
+                raw += digit;
+                console.log("raw", raw)
+                let num = parseFloat(raw) / 100;
+                console.log("num", num)
+                return num.toFixed(2);
+            })
+        }
+
     }
     return (
         <div className={style["container"]}>
             <div className={style["top-bar"]}>
                 <div className={style["go-back-table-name"]}>
-                    <div className={style["go-back"]} style={{ display: "flex" }} >                        
+                    <div className={style["go-back"]} style={{ display: "flex" }} >
                         <button onClick={() => navigate(-1)}>
                             <i className="bi bi-arrow-left"></i>
                         </button>
@@ -193,8 +219,9 @@ function Payment() {
                                 </div>
                             </div>
                             <div className={style["order-price"]}>
-                                Toplam:{order.price}₺
-                            </div>
+                                {order.onHouse ?
+                                    (<span>İKRAM</span>) : (order.discountedPrice ? <>Toplam: <del>{order["price"]} ₺</del> <span>{order["discountedPrice"]}₺</span></> : <span>{order["price"]}₺</span>)
+                                }          </div>
                         </div>
                     ))}
                 </div>
@@ -205,66 +232,66 @@ function Payment() {
                     </div>
                     <div className={style["input-buttons"]}>
                         <div className={style["input-button-row"]}>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>C</button>
+                            <div onClick={() => setMoneyInput("0.00")} className={style["calculator-button"]}>
+                                <button>C</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>1/2</button>
+                            <div onClick={() => {setMoneyInput(((remainingPrice)/2).toFixed(2)); setZeroOnClick(true)}} className={style["calculator-button"]}>
+                                <button >1/2</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>1/3</button>
+                            <div onClick={() => {setMoneyInput(((remainingPrice)/3).toFixed(2)); setZeroOnClick(true)}} className={style["calculator-button"]}>
+                                <button >1/3</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>1/4</button>
-                            </div>                            
+                            <div onClick={() => {setMoneyInput(((remainingPrice)/4).toFixed(2)); setZeroOnClick(true)}} className={style["calculator-button"]}>
+                                <button>1/4</button>
+                            </div>
                         </div>
                         <div className={style["input-button-row"]}>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>7</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>7</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>8</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>8</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>9</button>
+                            <div onClick={(e) => paymentInputChange(e)}className={style["calculator-button"]}>
+                                <button>9</button>
                             </div>
                             <div className={style["calculator-button"]}>
                                 <button>1/X</button>
-                            </div>                            
-                        </div>   
+                            </div>
+                        </div>
                         <div className={style["input-button-row"]}>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>4</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button >4</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>5</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>5</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>6</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>6</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>0</button>
-                            </div>                            
-                        </div>     
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>0</button>
+                            </div>
+                        </div>
                         <div className={style["input-button-row"]}>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>1</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>1</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>2</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>2</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>3</button>
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>3</button>
                             </div>
-                            <div className={style["calculator-button"]}>
-                                <button onClick={(e) => paymentInputChange(e)}>00</button>
-                            </div>                            
-                        </div>                                                               
+                            <div onClick={(e) => paymentInputChange(e)} className={style["calculator-button"]}>
+                                <button>00</button> 
+                            </div>
+                        </div>
                     </div>
                     <div className={style["payment-methods"]}>
-                        {paymentMethods?.map((method, index)=>(
-                            <div onClick={(e) => setPayment(e)} style={{ backgroundColor: "brown" }} className={style["method"]}>
-                                    {method.name}
+                        {paymentMethods?.map((method, index) => (
+                            <div onClick={() => setPayment(index)} style={{ backgroundColor: "brown" }} className={style["method"]}>
+                                {method.name}
                             </div>
                         ))}
                     </div>

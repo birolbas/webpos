@@ -35,7 +35,13 @@ function MenuSettings() {
     useEffect(()=>{
         const getProductsFromDB = async () =>{
             try{
-                const response = await fetch("http://127.0.0.1:5000/get_products")
+                const response = await fetch("http://127.0.0.1:5000/get_products",{
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    }
+                })
                 const data = await response.json()
                 console.log("data is ",data)
             if(response.ok){
@@ -70,16 +76,7 @@ function MenuSettings() {
             console.log(error)
         }
     }
-        
 
-    
-
-
-
-
-    useEffect(()=>{
-        console.log("products",products)
-    },[products])
 
     return (
         <div className={staticStyles.containers}>

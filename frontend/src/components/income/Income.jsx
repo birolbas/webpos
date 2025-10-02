@@ -6,6 +6,7 @@ import styles from './Income.module.css'
 import Clock from '../staticStyle/Clock'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
+import Payment from '../order/Payment'
 
 function Income() {
     const navigate = useNavigate()
@@ -18,53 +19,54 @@ function Income() {
     })
     const [peakHour, setPeakHour] = useState({})
     const [date, setDate] = useState();
+    const [displayDetailedIncome, setDisplayDetailedIncome] = useState(false)
+    const [restaurant, setRestaurant] = useState()
+    const [displayCalendar, setDisplayCalendar] = useState(false)
 
-    function displayCalendar() {
-        document.getElementsByClassName(styles["calendar"])[0].style.display = "block"
-    }
-    function displayCalendarNone(){
-        document.getElementsByClassName(styles["calendar"])[0].style.display = "none"
-
-    }
     const onChangeDate = date => {
         date[0] = date[0].toISOString().slice(0, 10)
         date[1] = date[1].toISOString().slice(0, 10)
         setDate([date[0], date[1]])
     }
-
-    useEffect(()=>{
-        console.log(date)
-    },[date])
-
-    const getDailyFromDB = async (date) => {    
-        console.log("date is",date) 
+ 
+    const getDailyFromDB = async (date) => {
         try {
             const response = await fetch("http://localhost:5000/income", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`
                 },
                 body: JSON.stringify(date)
             })
             if (response.ok) {
                 const data = await response.json()
-                console.log("data",data)
                 const pTypes = {
-                    "Payment Methods":paymentMethods,
-                    "Average per Person": 0,
+                    "Total": 0,
+                    "Net": 0,
+                    "Tax": 0,
+                    "DiscountTotal": 0,
+                    "ServiceChargeTotal": 0,
+                    "CheckCount": 0,
                     "Guest Count": 0,
+                    "Average per Person": 0,
+                    "Average per Check": 0,
+                    "Payment Methods": paymentMethods,
                     "Peak Hours": [],
                     "Open Total": 0,
                     "Closed Total": 0,
-                    "Total":0
                 }
-                pTypes["Payment Methods"].forEach((type, index)=>{
+                pTypes["Payment Methods"].forEach((type, index) => {
                     type["Total"] = 0
                 })
-                console.log("pTypes",pTypes["Payment Methods"])
+                console.log("data", data)
                 data.forEach((check, index) => {
+                    pTypes["Tax"] += check[13]
                     pTypes["Guest Count"] += parseInt(check[7])
+                    pTypes["ServiceChargeTotal"] += check[11]
+                    pTypes["DiscountTotal"] += check[10]
+                    pTypes["CheckCount"] += 1
                     const time = (check[8])
                     let [hour, _] = time.split(":")
                     hour = hour + ":00"
@@ -73,32 +75,38 @@ function Income() {
                         guestCount: check[7],
                         income: check[6],
                     }
-                    
-                    let existingHour = pTypes["Peak Hours"].find(h => h.hour === hour)
-                    if (existingHour) {
-                        existingHour.total += parseFloat(check[4])
-                        existingHour.guestCount += check[7]
-                    } else {
-                        pTypes["Peak Hours"].push({
-                            hour: hour,
-                            guestCount: check[7],
-                            total: parseFloat(check[4])
-                        });
-                    }
 
-                    if (check[5]?.length) {
+
+
+                    if (check[5]?.length > 0) {
                         check[5].forEach((payment, _) => {
-                            console.log("payment",payment)
-                            const paymentType = payment.paymentType
-                            const index = pTypes["Payment Methods"].findIndex(p => p.name == paymentType)
-                            pTypes["Payment Methods"][index].Total += parseFloat(payment.payedPrice)
-                            pTypes["Total"] += parseFloat(payment.payedPrice)
+                            const paymentType = payment.paymentType.name
+                            console.log("SEÇİLEN ÖDEME TYÜRÜ", paymentType)
+                            console.log("PAYMENT", payment)
+                            console.log(pTypes["Payment Methods"])
+                            const methodIndex = pTypes["Payment Methods"].findIndex(p => p.name == paymentType)
+                            console.log("pTypes[Payment Methods][index]", pTypes["Payment Methods"][methodIndex])
+                            console.log("methodIndeasdx", methodIndex)
+                            pTypes["Payment Methods"][methodIndex].Total += parseFloat(payment.payedPrice)
+                            if (payment.paymentType.includedIncome == "Evet") {
+                                pTypes["Total"] += parseFloat(payment.payedPrice)
+                                let existingHour = pTypes["Peak Hours"].find(h => h.hour === hour)
+                                if (existingHour) {
+                                    existingHour.total += parseFloat(check[4])
+                                    existingHour.guestCount += check[7]
+                                } else {
+                                    pTypes["Peak Hours"].push({
+                                        hour: hour,
+                                        guestCount: check[7],
+                                        total: parseFloat(check[4])
+                                    });
+                                }
+                            }
 
                         })
                     } else {
                         pTypes["Total"] += parseFloat(data[index][4])
-                        console.log("TOTALTALATTA",data[index])
-                        
+
                     }
                 })
                 if ((pTypes["Guest Count"]) == 0) {
@@ -111,22 +119,26 @@ function Income() {
                 if (isNaN(pTypes["Average per Person"]) === true) {
                     pTypes["Average per Person"] = 0
                 }
-                console.log("total",pTypes["Total"])
-                console.log("open total",pTypes["Open Total"])
-                console.log("closed total", pTypes["Closed Total"])
+
                 let closedSum = 0
-                pTypes["Payment Methods"].forEach((method,_)=>{
-                    closedSum += parseFloat(method.Total)
+                pTypes["Payment Methods"].forEach((method, _) => {
+                    console.log("method", method)
+                    if (method.includedIncome == "Evet") {
+                        closedSum += parseFloat(method.Total)
+                    }
                 })
                 pTypes["Closed Total"] = closedSum
                 pTypes["Open Total"] = parseFloat(pTypes["Total"]) - closedSum
+                pTypes["Net"] = pTypes["Total"] - pTypes["Tax"]
+                if (pTypes["CheckCount"] != 0) {
+                    pTypes["Average per Check"] = (pTypes["Total"] / pTypes["CheckCount"]).toFixed(2)
+                }
                 setPayments(pTypes)
-                console.log("peak saatler", pTypes["Peak Hours"])
-                if(pTypes["Peak Hours"].length > 0){
+                if (pTypes["Peak Hours"].length > 0) {
                     const peak = pTypes["Peak Hours"]?.reduce((max, current) =>
-                    current.total > max.total ? current : max
-                )
-                setPeakHour(peak)
+                        current.total > max.total ? current : max
+                    )
+                    setPeakHour(peak)
                 }
             }
         }
@@ -143,9 +155,10 @@ function Income() {
         const date = `${year}-${month}-${day}`;
         setDate(date)
         getDailyFromDB(date);
+        setRestaurant(localStorage.getItem("Restaurant"))
     }, [])
 
-    function displayMonthlyIncome(){
+    function displayMonthlyIncome() {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -161,7 +174,7 @@ function Income() {
                 <div className={staticStyles["middle-bar-top-bar"]}>
                     <div className={staticStyles["go-back-button"]}>
                         <button onClick={() => navigate(-1)}>
-                            <i className="bi bi-arrow-return-left"></i>
+                            <i className="bi bi-arrow-left"></i>
                         </button>
                     </div>
                     <div className={staticStyles["datetime"]}>
@@ -173,7 +186,7 @@ function Income() {
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Ciro</p>
                             <p className={styles["summary-data"]}>{payments["Total"]}₺</p>
-                            <p className={styles["last-week-comp"]}> Açık Çekler: {payments["Open Total"]}₺ Kapalı Çekler: {payments["Closed Total"]} </p>
+                            <p className={styles["last-week-comp"]}> Açık Çekler: {payments["Open Total"]}₺ Kapalı Çekler: {payments["Closed Total"]}₺</p>
                         </div>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Müşteri</p>
@@ -201,38 +214,78 @@ function Income() {
                 <div className={styles["payment-methods"]}>
                     <div className={`${styles["method"]} ${styles["summary-headers"]}`}>
                         <p className={styles["summary-headers"]}>Ödeme Şekilleri</p>
-                        {paymentMethods.map((method,index)=>(
-                            <div className={styles["payment-method"]}>
-                                <p>{method.name}</p>
-                                <p className={styles["payment-amount"]}>{method.Total}₺</p>
-                            </div>
-                        ))}
+                        {paymentMethods.map((method, index) => {
+                            if (method.includedIncome == "Evet") {
+                                return <>
+                                    <div className={styles["payment-method"]}>
+                                        <p>{method.name}</p>
+                                        <p className={styles["payment-amount"]}>{method.Total}₺</p>
+                                    </div>
+                                </>
+                            }
+                        })}
 
                     </div>
                 </div>
 
                 <div className={styles["action-buttons-container"]}>
                     <div className={styles["action-buttons"]}>
-                        <button onClick={() => displayCalendar()} style={{ backgroundColor: "green" }}>Tarih Seç</button>
-                        <button onClick={() => displayMonthlyIncome()} style={{ backgroundColor: "red" }}>Aylık</button>
+                        <button onClick={() => setDisplayCalendar(!displayCalendar)} style={{ backgroundColor: "#14b8a6" }}>Tarih Seç</button>
+                        <button onClick={() => displayMonthlyIncome()} style={{ backgroundColor: "#f97316" }}>Aylık</button>
                     </div>
                     <div className={styles["action-buttons"]}>
-                        <button style={{ backgroundColor: "blue" }}>Detaylı Rapor</button>
-                        <button style={{ backgroundColor: "purple" }}>Yazdır</button>
+                        <button onClick={() => setDisplayDetailedIncome(!displayDetailedIncome)} style={{ backgroundColor: "#6366f1" }}>Detaylı Rapor</button>
+                        <button style={{ backgroundColor: "#ec4899" }}>Yazdır</button>
                     </div>
                 </div>
-                <div className={styles["calendar"]}>
-                    <div className={styles["calendar-headers"]}>
-                        <button onClick={displayCalendarNone} className={styles["calendar-close"]}>
-                            <i className="bi bi-x-circle"></i>
-                        </button>
-                        <h1>Tarih Seçiniz</h1>
+                {displayCalendar && (
+                    <div className={styles["calendar"]}>
+                        <div className={styles["calendar-headers"]}>
+                            <button onClick={() => setDisplayCalendar(false)} className={styles["calendar-close"]}>
+                                <i className="bi bi-x-circle"></i>
+                            </button>
+                            <h1>Tarih Seçiniz</h1>
+                        </div>
+                        <Calendar selectRange={true} onChange={onChangeDate} value={date} />
+                        <button onClick={() => { (getDailyFromDB(date)); setDisplayCalendar(false) }} className={styles["change-date-button"]}> Seçimi Onayla</button>
                     </div>
-                    <Calendar selectRange={true} onChange={onChangeDate} value={date} />
-                    <button onClick={()=>{(getDailyFromDB(date)); displayCalendarNone() }} className={styles["change-date-button"]}> Seçimi Onayla</button>
-                </div>
+                )
+                }
 
             </div>
-        </div>)
-} 
+            {displayDetailedIncome && (
+                <div className={styles["detailed-income-container"]}>
+                    <div className={styles["detailed-income-headers"]}>
+                        <button>
+                            <i onClick={()=>setDisplayDetailedIncome(false)} className="bi bi-x-circle"></i>
+                        </button>
+                        <h1>Detaylı Rapor</h1>
+                    </div>
+                    <div className={styles["detailed-income-dates"]}>
+                        <p>Başlangıç Tarihi <span> {date[0]} </span> </p>
+                        <p>Bitiş Tarihi <span> {date[1]} </span></p>
+                        <p>İşletme <span> {restaurant} </span> </p>
+                    </div>
+                    <div className={styles["income-details"]}>
+                        <p>Brüt <span>{payments["Total"]}₺</span></p>
+                        <p>Net <span> {payments["Net"]}₺ </span></p>
+                        <p>Vergi <span> {payments["Tax"].toFixed(2)}₺ </span> </p>
+                        <p>İndirim <span> {payments["DiscountTotal"]}₺ </span></p>
+                        <p>Servis Ücreti <span> {payments["ServiceChargeTotal"]}₺ </span></p>
+                        <p>Hesap Sayısı <span> {payments["CheckCount"]} </span></p>
+                        <p>Müşteri Sayısı <span>{payments["Guest Count"]}</span></p>
+                        <p>Müşteri Başına Tutar <span>{payments["Average per Person"]}₺</span></p>
+                        <p>Ortalama Hesap Tutarı <span>{payments["Average per Check"]}₺</span> </p>
+                    </div>
+                    <div className={styles["payment-details"]}>
+                        {payments["Payment Methods"].map((method, index) => (
+                            <p>{method.name} <span> {method.Total}₺ </span> </p>
+                        ))}
+                    </div>
+
+                </div>
+            )}
+        </div>
+    )
+}
 export default Income

@@ -1,11 +1,45 @@
 import logo from '../../assets/resto.png'
 import styles from './LoginSign.module.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function LoginSign() {
     const [login, setLogin] = useState(true)
     const navigate = useNavigate()
+
+    const meFunction = async (token) => {
+            try {
+                const response = await fetch("http://127.0.0.1:5000/isAlreadyLoggedIn", {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(token)
+                })
+                if (response.ok) {
+                    const data = await response.json()
+                    return data
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+    useEffect(() => {
+        const token = localStorage.getItem("token")
+
+        const run = async () =>{
+            if(token){
+                const data = await meFunction(token)
+                if(data){
+                    console.log(data)
+                    navigate("/waiter_login")
+                }
+            }
+        }
+        run()
+    }, [])
     const signUp = async () => {
         const restaurant_name = document.getElementById("sign-up-restaurant-name").value
         const e_mail = document.getElementById("sign-up-e-mail").value
@@ -21,6 +55,7 @@ function LoginSign() {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`
                 },
                 body: JSON.stringify(object)
             })
@@ -39,9 +74,10 @@ function LoginSign() {
         const e_mail = document.getElementById("e-mail-input").value
         const password = document.getElementById("password-input").value
         const object = {
-            e_mail : e_mail,
-            password :password
+            e_mail: e_mail,
+            password: password
         }
+
         try {
             const response = await fetch("http://127.0.0.1:5000/login", {
                 method: "POST",
@@ -51,13 +87,15 @@ function LoginSign() {
                 },
                 body: JSON.stringify(object)
             })
-            if(response.ok){
+            if (response.ok) {
                 const data = await response.json()
-                if(data["success"]){
+                console.log("data is", data)
+                localStorage.setItem("token", data.access_token)
+                if (data["success"]) {
                     navigate("/waiter_login")
                 }
             }
-        }catch(error){
+        } catch (error) {
             console.log(error)
         }
 
@@ -112,7 +150,7 @@ function LoginSign() {
                 </div>
                 <a href="">Şifremi unuttum</a>
                 <div className={styles["login-button"]}>
-                    <button onClick={()=>loginCheck()}>Giriş Yap</button>
+                    <button onClick={() => loginCheck()}>Giriş Yap</button>
                 </div>
                 <div className={styles["create-acc"]}>
                     <p style={{ color: "white" }}>Hesabınız mı yok?</p>

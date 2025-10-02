@@ -5,3 +5,13 @@
     background: #006edc !important;
     color: white;
 }
+.react-calendar__tile--hover{
+  background-color: orange !important;
+}
+.react-calendar__month-view__days__day{
+  border-radius: 16px;
+  gap: 1rem;
+}
+.react-calendar__tile--range{
+  background-color: orange !important;
+}

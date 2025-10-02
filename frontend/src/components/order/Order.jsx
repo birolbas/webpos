@@ -1,47 +1,81 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
-import Tables from "../tables/Tables";
-import Settings from "../settings/Settings";
-import styles from './Orders.module.css';
+import {  useEffect, useState } from "react"
+import { useParams, useNavigate } from 'react-router-dom'
+import Tables from "../tables/Tables"
+import Settings from "../settings/Settings"
+import styles from './Orders.module.css'
 import staticStyles from '../staticStyle/StaticStyle.module.css'
-import LeftBar from "../staticStyle/LeftBar";
-import Clock from "../staticStyle/Clock";
-import { Link } from 'react-router-dom';
+import LeftBar from "../staticStyle/LeftBar"
+import Clock from "../staticStyle/Clock"
+import { Link } from 'react-router-dom'
 
 function Order() {
-    const params = useParams();
+    const params = useParams()
     const table_id = (params["table_id"])
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
-    const [prevOrders, setPrevOrders] = useState([]);
-    const [newOrders, setNewOrders] = useState([]);
-    const [displayOrderType, setDisplayOrderType] = useState("prev");
+    const [prevOrders, setPrevOrders] = useState([])
+    const [groupedPrevOrdersByTime, setGroupedPrevOrdersByTime] = useState([])
+    const [newOrders, setNewOrders] = useState([])
+    const [displayOrderType, setDisplayOrderType] = useState("prev")
     const [totalPrice, setTotalPrice] = useState(0);
     const [productCategory, setProductCategory] = useState([])
     const [products, setProducts] = useState([])
     const [chosenCategory, setChosenCategory] = useState([])
     const [chosenSubCategory, setChosenSubCategory] = useState()
     const [guestCount, setGuestCount] = useState(0)
+    const [taxTotal, setTaxTotal] = useState(0)
     const [isDelete, setIsDelete] = useState(false)
     const [descriptionText, setDescriptionText] = useState("")
     const [isLoading, setIsLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState("")
+    const [showDiscountService, setShowDiscountService] = useState(false)
+    const [noteInput, setNoteInput] = useState("")
+    const [addDescription, setAddDescription] = useState(false)
+    const [displayServiceDiscount, setDisplayServiceDiscount] = useState(false)
+    const [addDiscount, setAddDiscount] = useState(false)
 
-        useEffect(() => {
+    const [staticDiscount, setStaticDiscount] = useState([])
+    const [staticServiceCharges, setStaticServiceCharges] = useState([])
+
+    const [chosenDiscount, setChosenDiscount] = useState()
+    //discount for check or item?
+    const [checkDiscounts, setCheckDiscounts] = useState([])
+    const [discountFor, setDiscountFor] = useState("item")
+    const [discounts, setDiscounts] = useState(0)
+    const [newDiscountTypes, setNewDiscountTypes] = useState("new")
+    const [itemDiscountIndex, setItemDiscountIndex] = useState(null)
+    const [checkDiscountOpen, setCheckDiscountOpen] = useState(false)
+
+    const [chosenServiceCharge, setChosenServiceCharge] = useState()
+    const [newServiceChargeTypes, setNewServiceChargeTypes] = useState("new")
+    const [checkServiceCharges, setCheckServiceCharges] = useState([])
+    const [checkServiceOpen, setCheckServiceOpen] = useState(false)
+    const [serviceChargeTotal, setServiceChargeTotal] = useState(0)
+
+    useEffect(() => {
         const getOrderFromDB = async () => {
             try {
                 console.log("table id is ", table_id)
-                const getOrdersResponse = await fetch("http://127.0.0.1:5000/get_orders");
+                const getOrdersResponse = await fetch(`http://127.0.0.1:5000/get_table_order/${table_id}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    },
+                })
                 if (getOrdersResponse.ok) {
-                    const getOrdersData = await getOrdersResponse.json();
-                    const Index = getOrdersData.findIndex(o => o[2] === table_id)
-                    setPrevOrders([...getOrdersData[Index][5]])
-                    setTotalPrice(parseFloat(getOrdersData[Index][6]))
-                    setGuestCount(getOrdersData[Index][8])
+                    const getOrdersData = await getOrdersResponse.json()
+                    
+                    setDiscounts(parseFloat(getOrdersData[0].total_discount))
+                    setServiceChargeTotal(parseFloat(getOrdersData[0].total_service_charge))
+                    setCheckServiceCharges(getOrdersData[0].checkservicecharges)
+                    setCheckDiscounts(getOrdersData[0].checkdiscounts)
+                    setPrevOrders([...getOrdersData[0].products])
+                    setTotalPrice(parseFloat(getOrdersData[0].total_price))
+                    setGuestCount(getOrdersData[0].guest_count)
+                    setTaxTotal(getOrdersData[0].tax_total)
 
                 } else {
-                    console.log("error happened", getOrdersResponse.statusText);
+                    console.log("error happened", getOrdersResponse.statusText)
                 }
             } catch (error) {
                 console.log(error);
@@ -55,13 +89,14 @@ function Order() {
         try {
             const staticCategory = JSON.parse(localStorage.getItem("Menu"))
             const staticProducts = JSON.parse(localStorage.getItem("Products"))
-            
+            setStaticDiscount(JSON.parse(localStorage.getItem("Discounts")))
+            setStaticServiceCharges(JSON.parse(localStorage.getItem("ServiceCharges")))
             if (!staticCategory || !staticProducts) {
                 console.error("Menu or Products data not found in localStorage")
                 setIsLoading(false)
                 return
             }
-            
+
             console.log("staticProducts", staticProducts)
             console.log(staticCategory[0].categoryName)
             const tempCategories = []
@@ -70,7 +105,7 @@ function Order() {
             staticCategory.forEach((item, index) => {
                 const category = item.categoryName
                 const subCategoryProducts = []
-                if (item.subCategories) {
+                if (item.subCategories.length > 0) {
                     item.subCategories.forEach((sub, index) => {
                         const product = staticProducts.filter(p => p.category === sub)
                         const subCateAndProducts = {
@@ -117,37 +152,47 @@ function Order() {
         onMount()
     }, [])
     useEffect(() => {
-        console.log(chosenSubCategory)
-    }, [chosenSubCategory])
-    function appendOrder(event) {
+        console.log("taxTotal", taxTotal)
+    }, [taxTotal])
+    function appendOrder(index) {
         setDisplayOrderType("new");
-        const productName = event.currentTarget.querySelector('#product-name').textContent;
-        console.log("prev order", prevOrders)
-        const productPrice = Number(event.currentTarget.querySelector('#product-price').textContent);
-        const existingIndex = newOrders.findIndex(order => order.name === productName);
-
+        const productName = products[index].name
+        const productPrice = Number(products[index].price)
+        const new_date = new Date();
+        const time = (new_date.toLocaleTimeString('tr-TR', { hour: "numeric", minute: "numeric" }))
+        const taxPercent = products[index].tax.taxPercent
+        const existingIndex = newOrders.findIndex(order => order.name === productName && order.note == undefined && order.onHouse == undefined)
         if (existingIndex !== -1) {
-            const updatedOrders = [...newOrders];
-            updatedOrders[existingIndex].amount += 1;
+            const updatedOrders = [...newOrders]
+            updatedOrders[existingIndex].amount += 1
             updatedOrders[existingIndex].price += productPrice
-            setNewOrders(updatedOrders);
+            updatedOrders[existingIndex].time = time
+            setNewOrders(updatedOrders)
 
         } else {
             const newOrder = {
                 amount: 1,
                 name: productName,
                 price: productPrice,
+                discounts: [],
+                time: time
             };
             setNewOrders([...newOrders, newOrder]);
         }
+        const tax = Number((productPrice * (taxPercent / (100 + taxPercent))).toFixed(2))
+        console.log("tax is ", tax, "tax total is ", taxTotal)
+        setTaxTotal(Number((taxTotal + tax).toFixed(2)))
         const newTotalPrice = totalPrice + Number(productPrice);
         setTotalPrice(newTotalPrice);
     }
+
     function closeActions(index) {
         if (displayOrderType == "prev") {
             const actionBox = document.querySelector(`#prev-${index}`)
             actionBox.style.display = "none"
-            console.log(actionBox)
+        } else {
+            const actionBox = document.querySelector(`#new-${index}`)
+            actionBox.style.display = "none"
         }
     }
     function closeAllActions() {
@@ -158,16 +203,15 @@ function Order() {
             }
         });
     }
-    function openActions(index) {
+    function openActions(index, groupIndex) {
+        console.log("group", groupIndex, "index", index)
         if (displayOrderType == "prev") {
-            const actionBox = document.querySelector(`#prev-${index}`)
-            console.log("actionbox is", actionBox)
+            const group = document.getElementsByClassName(styles["order-items"])[0].childNodes[groupIndex]
+            const actionBox = group.querySelector(`#prev-${index}`)
             actionBox.style.display = "flex"
-            console.log(actionBox)
         } else if (displayOrderType == "new") {
             const actionBox = document.querySelector(`#new-${index}`)
             actionBox.style.display = "flex"
-            console.log(actionBox)
         }
     }
     useEffect(() => {
@@ -177,32 +221,201 @@ function Order() {
         }
     }, [isDelete])
 
-    function deleteOrder(index) {
+    useEffect(() => {
+        const grouped_orders = prevOrders.reduce((acc, order) => {
+            if (!acc[order.time]) {
+                acc[order.time] = []
+            }
+            acc[order.time].push(order);
+            return acc
+        }, {})
+        setGroupedPrevOrdersByTime(grouped_orders)
+        console.log(grouped_orders)
+    }, [prevOrders])
+
+    function deleteOrder(index, groupIndex) {
         if (displayOrderType == "prev") {
-            console.log(prevOrders[index])
-            const prevOrdersToDelete = [...prevOrders]
-            const priceToSub = parseFloat(prevOrdersToDelete[0].price)
-            setTotalPrice(totalPrice - priceToSub)
-            prevOrdersToDelete.splice(index, 1)
-            setPrevOrders(prevOrdersToDelete)
-            closeAllActions()
-            setIsDelete(true)
+            console.log(groupIndex)
+            console.log("groupedPrevOrdersByTime[groupIndex]", groupedPrevOrdersByTime[groupIndex][index])
+            const prevOrdersToDelete = { ...groupedPrevOrdersByTime }
+            console.log("prevOrdersToDelete[groupIndex][index]", prevOrdersToDelete[groupIndex][index])
+            if (prevOrdersToDelete[groupIndex][index].onHouse) {
+                prevOrdersToDelete[groupIndex][index].onHouse = false
+            }
+            if (prevOrdersToDelete[groupIndex][index].discounts.length > 0) {
+                prevOrdersToDelete[groupIndex][index].discounts = []
+                setTotalPrice(totalPrice - prevOrdersToDelete[index].discountedPrice)
+                delete prevOrdersToDelete[groupIndex][index].discountedPrice
+            } else {
+                console.log(prevOrdersToDelete)
+                setTotalPrice(totalPrice - prevOrdersToDelete[groupIndex][index].price)
+            }
+            if (prevOrdersToDelete[groupIndex].length == 1) {
+                delete prevOrdersToDelete[groupIndex]
+            } else {
+                prevOrdersToDelete[groupIndex].splice(index, 1)
+            }
+            setGroupedPrevOrdersByTime(prevOrdersToDelete)
+
         } else {
             const newOrdersToDelete = [...newOrders]
-            const priceToSub = parseFloat(newOrdersToDelete[0].price)
-            setTotalPrice(totalPrice - priceToSub)
+            console.log(newOrdersToDelete)
+            if (newOrdersToDelete[index].onHouse) {
+                newOrdersToDelete[index].onHouse = false
+            }
+            if (newOrdersToDelete[index].discounts.length > 0) {
+                newOrdersToDelete[index].discounts = []
+                setTotalPrice(totalPrice - newOrdersToDelete[index].discountedPrice)
+                delete newOrdersToDelete[index].discountedPrice
+            } else {
+                console.log(newOrdersToDelete)
+                setTotalPrice(totalPrice - newOrdersToDelete[index].price)
+            }
             newOrdersToDelete.splice(index, 1)
             setNewOrders(newOrdersToDelete)
-            closeAllActions()
         }
+        setIsDelete(true)
+        closeAllActions()
     }
     function displayOrderTypeChange(display) {
         setDisplayOrderType(display)
         closeAllActions()
     }
-    function addDescription(index) {
-        console.log(index)
 
+
+
+    function saveDescription(index) {
+        const tempNewOrders = [...newOrders]
+        if (tempNewOrders[index].note) {
+            tempNewOrders[index].note.push(noteInput)
+
+        } else {
+            tempNewOrders[index].note = [noteInput]
+        }
+        setNewOrders(tempNewOrders)
+        setAddDescription(false)
+    }
+
+    function saveDiscount(discountForWhat, index, groupIndex) {
+        const updateOrderDiscountsForItem = (orders, setOrders) => {
+            console.log("index is ", index, groupIndex)
+            const tempOrders = displayOrderType == "prev" ? { ...groupedPrevOrdersByTime } : [...orders]
+            const order = tempOrders[groupIndex][index]
+            console.log(order)
+            if (!order.discounts) {
+                order.discounts = []
+                order.discountedPrice = order.price
+            }
+            order.discounts.push(chosenDiscount)
+            if (chosenDiscount.discountType == "Fixed") {
+                order.discountedPrice = order.price - chosenDiscount.discountAmount
+                setTotalPrice(totalPrice - chosenDiscount.discountAmount)
+                setDiscounts(discounts + chosenDiscount.discountAmount)
+
+            }
+            else {
+                order.discountedPrice = order.price - (order.price * chosenDiscount.discountAmount / 100)
+                setDiscounts(discounts + order.price * chosenDiscount.discountAmount / 100)
+                setTotalPrice(totalPrice - (order.price * chosenDiscount.discountAmount / 100))
+            }
+            setOrders(tempOrders);
+            setChosenDiscount()
+            setAddDiscount(false);
+        }
+        const updateOrderDiscountsForCheck = () => {
+            setCheckDiscounts(prev => (
+                [...prev, chosenDiscount]
+            ))
+            if (chosenDiscount.discountType == "Fixed") {
+                setDiscounts(discounts + chosenDiscount.discountAmount)
+                setTotalPrice(totalPrice - chosenDiscount.discountAmount)
+            } else {
+                setDiscounts(discounts + totalPrice * (chosenDiscount.discountAmount / 100))
+                setTotalPrice(totalPrice - totalPrice * (chosenDiscount.discountAmount / 100))
+            }
+            setChosenDiscount()
+            setAddDiscount(false)
+
+        }
+        if (discountForWhat === "item") {
+            if (displayOrderType === "prev") {
+                updateOrderDiscountsForItem(groupedPrevOrdersByTime, setGroupedPrevOrdersByTime)
+            } else {
+                updateOrderDiscountsForItem(newOrders, setNewOrders)
+            }
+        } else {
+            updateOrderDiscountsForCheck()
+        }
+    }
+
+    function saveCheckServiceCharge() {
+        setCheckServiceCharges(prev => [...prev, chosenServiceCharge])
+        if (chosenServiceCharge.serviceChargeType == "Percentage") {
+            setServiceChargeTotal(serviceChargeTotal + totalPrice * (chosenServiceCharge.serviceChargeAmount / 100))
+            setTotalPrice(totalPrice + totalPrice * (chosenServiceCharge.serviceChargeAmount / 100))
+        } else {
+            setServiceChargeTotal(serviceChargeTotal + chosenServiceCharge.serviceChargeAmount)
+            setTotalPrice(totalPrice + chosenServiceCharge.serviceChargeAmount)
+        }
+        setCheckServiceOpen(false)
+    }
+
+    function deleteCheckService(index) {
+        const tempCheckServiceCharges = [...checkServiceCharges]
+        if (tempCheckServiceCharges[index].serviceChargeType == "Percentage") {
+            setTotalPrice(totalPrice * (100 / (100 + chosenServiceCharge.serviceChargeAmount)))
+            setServiceChargeTotal(serviceChargeTotal - totalPrice * (10 / (100 + chosenServiceCharge.serviceChargeAmount)))
+        } else {
+            setTotalPrice(totalPrice - chosenServiceCharge.serviceChargeAmount)
+            setServiceChargeTotal(serviceChargeTotal - chosenServiceCharge.serviceChargeAmount)
+        }
+        tempCheckServiceCharges.splice(index, 1)
+        setCheckServiceCharges(tempCheckServiceCharges)
+    }
+
+    function deleteCheckDiscount(index) {
+        const tempCheckDiscounts = [...checkDiscounts]
+        tempCheckDiscounts.splice(index, 1)
+        setCheckDiscounts(tempCheckDiscounts)
+
+    }
+    useEffect(() => {
+        console.log("checkServiceCharges", chosenServiceCharge)
+    }, [chosenServiceCharge])
+    function onHouse(index, groupIndex) {
+        if (displayOrderType == "prev") {
+            console.log("asd")
+            const tempPrevOrders = { ...groupedPrevOrdersByTime }
+            console.log(tempPrevOrders[groupIndex])
+            const price = parseFloat(tempPrevOrders[groupIndex][index].price)
+            console.log("tempPrevOrders[index].onHouse", tempPrevOrders[groupIndex][index].onHouse)
+            if (tempPrevOrders[groupIndex][index].onHouse) {
+                tempPrevOrders[groupIndex][index].onHouse = false
+                console.log(totalPrice + price)
+                setTotalPrice(totalPrice + price)
+            } else {
+                tempPrevOrders[groupIndex][index].onHouse = true
+                console.log(totalPrice - price)
+                setTotalPrice(totalPrice - price)
+            }
+            setGroupedPrevOrdersByTime(tempPrevOrders)
+            closeAllActions()
+        } else {
+            const tempNewOrders = [...newOrders]
+            const price = parseFloat(tempNewOrders[index].price)
+            console.log("tempNewOrders[index].onHouse", tempNewOrders[index].onHouse)
+            if (tempNewOrders[index].onHouse) {
+                tempNewOrders[index].onHouse = false
+                console.log(totalPrice + price)
+                setTotalPrice(totalPrice + price)
+            } else {
+                tempNewOrders[index].onHouse = true
+                console.log(totalPrice - price)
+                setTotalPrice(totalPrice - price)
+            }
+            setNewOrders(tempNewOrders)
+            closeAllActions()
+        }
     }
     function newOrdersDiv() {
         return <><ul className={styles["order-items"]}>
@@ -212,27 +425,37 @@ function Order() {
                         <span>{order["amount"]}</span>
                     </div>
                     <div className={styles["order-name"]}>
-                        <span >{order["name"]}</span>
+                        <span>{order["name"]}</span>
+                        {order.note && <div className={styles["order-note"]}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="bi bi-file-earmark-text" viewBox="0 0 16 16">
+                                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5" />
+                                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                            </svg>
+                            <span> {order.note} </span>
+                        </div>}
                     </div>
 
                     <div className={styles["price"]}>
-                        <span >{order["price"]} ₺</span>
+                        {order.onHouse ?
+                            <span>İKRAM</span> : <span>{order["price"]} ₺</span>
+                        }
                     </div>
 
                     <div className={styles["order-item-actions"]}>
                         <button onClick={() => openActions(index)}>
-                            <i className="bi bi-three-dots"></i>
+                            <i className="bi bi-three-dots-vertical"></i>
+
                         </button>
                     </div>
 
                     <div id={`new-${index}`} className={styles["order-item-actions-box"]}>
-                        <button onClick={(index) => addDescription(index)}>
+                        <button onClick={() => { setAddDescription(!addDescription), closeAllActions() }}>
                             <i className="bi bi-file-text"> </i>
                         </button>
                         <button>
                             <i className="bi bi-percent"></i>
                         </button>
-                        <button>
+                        <button onClick={() => onHouse(index)} >
                             <i className="bi bi-basket3"></i>
                         </button>
                         <button onClick={() => deleteOrder(index)}>
@@ -242,23 +465,42 @@ function Order() {
                             <i className="bi bi-x-circle"></i>
                         </button>
                     </div>
-                    <div className={styles["order-description"]}>
-                        <div>
-                            <h1>Açıklama Ekle</h1>
-                            <div className={styles["new-description-input"]}>
-                                <input
-                                    id="new-description-input"
-                                    type="text"
-                                    placeholder="Açıklama"
-                                />
-                                <div className={styles["action-buttons"]}>
-                                    <div className={styles["save-new-button"]}>
-                                        <button >Kaydet</button>
+                    {addDescription &&
+                        <div id={`new-${index}`} className={styles["order-note-container"]}>
+                            <div className={styles["order-notes"]}>
+                                <div className={styles["order-note-header"]}>
+                                    <h1>Not Ekle</h1>
+                                </div>
+                                <div className={styles["previous-notes-container"]}>
+                                    <div className={styles["previous-notes-header"]}>
+                                        <h2>Önceki notlar</h2>
+                                    </div>
+                                    <div className={styles["previous-notes"]}>
+                                        {Array.isArray(order?.note) &&
+                                            order?.note?.map((note, index) => (
+                                                <div className={styles["previous-note"]}>
+                                                    <button>{note}</button>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                                    </svg>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                                <div className={styles["new-note-input"]}>
+                                    <textarea onChange={(e) => setNoteInput(e.target.value)} name="" id=""></textarea>
+                                </div>
+                                <div className={styles["note-action-buttons"]}>
+                                    <div className={styles["note-cancel-new-button"]}>
+                                        <button onClick={() => setAddDescription(!addDescription)}>İptal</button>
+                                    </div>
+                                    <div className={styles["note-save-new-button"]}>
+                                        <button onClick={() => saveDescription(index)}>Kaydet</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    }
 
                 </li>
             ))}
@@ -268,84 +510,145 @@ function Order() {
     }
     function prevOrdersDiv() {
         return <><ul className={styles["order-items"]}>
-            {prevOrders.map((order, index) => (
-                <li key={index}>
-                    <div className={styles["product-amount"]}>
-                        <span>{order["amount"]}</span>
-                    </div>
-                    <div className={styles["order-name"]}>
-                        <span >{order["name"]}</span>
-                    </div>
+            {Object.entries(groupedPrevOrdersByTime).map((groupOrders, groupIndex) => (
+                <div key={groupIndex} >
+                    <p>{groupOrders[0]}</p>
+                    {groupOrders[1].map((order, index) => (
+                        <li key={index}>
+                            <div className={styles["product-amount"]}>
+                                <span>{order["amount"]}</span>
+                            </div>
+                            <div className={styles["order-name"]}>
+                                <span>{order["name"]}</span>
+                                {order.note && <div className={styles["order-note"]}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="bi bi-file-earmark-text" viewBox="0 0 16 16">
+                                        <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5" />
+                                        <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+                                    </svg>
+                                    <span> {order.note} </span>
+                                </div>}
+                            </div>
 
-                    <div className={styles["price"]}>
-                        <span >{order["price"]} ₺</span>
-                    </div>
+                            <div className={styles["price"]}>
+                                {order.onHouse ?
+                                    (<span>İKRAM</span>) : (order.discountedPrice ? <><del>{order["price"]} ₺</del> <span>{order["discountedPrice"]}₺</span></> : <span>{order["price"]}₺</span>)
+                                }
 
-                    <div className={styles["order-item-actions"]}>
-                        <button onClick={() => openActions(index)}>
-                            <i className="bi bi-three-dots"></i>
-                        </button>
-                    </div>
+                            </div>
 
-                    <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
-                        <button onClick={(index) => addDescription(index)}>
-                            <i className="bi bi-file-text"> </i>
-                        </button>
-                        <button>
-                            <i className="bi bi-percent"></i>
-                        </button>
-                        <button>
-                            <i className="bi bi-basket3"></i>
-                        </button>
-                        <button onClick={() => deleteOrder(index)}>
-                            <i className="bi bi-trash"></i>
-                        </button>
-                        <button onClick={() => closeActions(index)}>
-                            <i className="bi bi-x-circle"></i>
-                        </button>
-                    </div>
-                    <div id={`prev-${index}`} className={styles["order-description"]}>
-                        <div>
-                            <h1>Açıklama Ekle</h1>
-                            <div className={styles["new-description-input"]}>
-                                <input
-                                    id="new-description-input"
-                                    type="text"
-                                    placeholder="Açıklama"
-                                />
-                                <div className={styles["action-buttons"]}>
-                                    <div className={styles["save-new-button"]}>
-                                        <button >Kaydet</button>
+
+                            <div className={styles["order-item-actions"]}>
+                                <button onClick={() => openActions(index, groupIndex)}>
+                                    <i className="bi bi-three-dots"></i>
+                                </button>
+                            </div>
+
+                            <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
+                                <button onClick={() => { setItemDiscountIndex(index, groupOrders[0]), setDiscountFor("item"), closeAllActions() }}>
+                                    <i className="bi bi-percent"></i>
+                                </button>
+                                <button onClick={() => { onHouse(index, groupOrders[0]), closeAllActions() }}>
+                                    <i className="bi bi-basket3"></i>
+                                </button>
+                                <button onClick={() => { deleteOrder(index, groupOrders[0]), closeAllActions() }}>
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                                <button onClick={() => { closeActions(index), closeAllActions() }}>
+                                    <i className="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                            {itemDiscountIndex == index && (
+                                <div id={`prev-${index}`} className={styles["product-discount-container"]}>
+                                    <div className={styles["product-discount"]}>
+                                        <div className={styles["order-note-header"]}>
+                                            <h1>İndirim Uygula</h1>
+                                        </div>
+                                        <div className={styles["defined-discount-types"]}>
+                                            <div className={styles["prev-new-discounts"]} >
+                                                <button className={newDiscountTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("new")}  >Yeni İndirim</button>
+                                                <button className={newDiscountTypes == "prev" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("prev")}>Uygulanan İndirimler</button>
+                                            </div>
+                                            {newDiscountTypes == "new" ? <>
+                                                {staticDiscount.map((discount, index) => (
+                                                    <div onClick={() => setChosenDiscount(discount)} className={chosenDiscount == discount ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
+                                                        <h1>{discount.discountName}</h1>
+                                                        <p> {discount.discountType == "Percentage" ? `Yüzdesel ${discount.discountAmount}%` : `Sabit ${discount.discountAmount} ₺`} </p>
+                                                    </div>
+                                                ))
+                                                }
+                                                <div className={styles["manual-discount-input"]}>
+                                                    <p>Farklı bir ücret girmek için:</p>
+                                                    <input onChange={(e) => setChosenDiscount({ discountAmount: e.target.value, discountName: "Custom Discount", discountType: "Fixed" })} type="number" name="" id="" />
+                                                </div></> :
+                                                <div className={styles["applied-discount"]}>
+                                                    {discountFor == "item" ? order?.discounts?.map((discount, itemDiscountIndex) => (
+                                                        <div>
+                                                            <p>{discount.discountName}
+                                                                <svg onClick={() => deleteItemDiscount(itemDiscountIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                                </svg>
+                                                            </p>
+                                                        </div>
+                                                    )) : checkDiscounts.map((discount, checkDiscountIndex) => (
+                                                        <div onClick={() => deleteCheckDiscount(checkDiscountIndex)}>
+                                                            <p>{discount.discountName}
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                                </svg>
+                                                            </p>
+                                                        </div>
+                                                    ))}
+
+                                                </div>
+                                            }
+                                        </div>
+                                        <div className={styles["discount-action-buttons"]}>
+                                            <div onClick={() => { setItemDiscountIndex(null); setChosenDiscount() }} className={styles["discount-cancel-new-button"]}>
+                                                <button>İptal</button>
+                                            </div>
+                                            <div onClick={() => saveDiscount("item", index, groupOrders[0])} className={styles["discount-save-new-button"]}>
+                                                <button>Kaydet</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </li>
+                            )
+                            }
+                        </li>
+                    ))}</div>
             ))}
         </ul>
         </>
     }
 
 
-    function changeCategory(e) {
-        console.log("chosenCategory", chosenCategory)
+
+    function changeCategory(e, pCategory) {
         const categoryName = e.target.textContent
         const index = productCategory.findIndex(p => p.category == categoryName)
-        setChosenCategory(productCategory[index])
-        setChosenSubCategory(productCategory[index].subCategories[0])
+        console.log("productCategory", index)
+        setChosenCategory(pCategory)
+        if(pCategory.subCategories.length > 0){
+            setChosenSubCategory(productCategory[index].subCategories[0])
+        }else{
+            setChosenSubCategory()
+            setProducts(pCategory.products)
+        }
     }
-
-    useEffect(() => {
-        console.log("products", products)
-    }, [products])
 
     const setOrderToDB = async (isDelete) => {
         const totalOrders = []
-        prevOrders.forEach(prev => totalOrders.push({ ...prev }))
+        const asd = []
+        Object.entries(groupedPrevOrdersByTime).forEach((group, indx) => (
+            group[1].forEach((order, _) => {
+                asd.push(order)
+            })
+        ))
+        asd.forEach(prev => totalOrders.push({ ...prev }))
         newOrders.forEach(newOrder => {
-            const existingIndex = totalOrders.findIndex(order => order.name === newOrder.name)
+            const existingIndex = totalOrders.findIndex(order => order.name === newOrder.name && order.note == undefined && order.time == newOrder.time)
             if (existingIndex !== -1) {
                 totalOrders[existingIndex].amount += newOrder.amount
                 totalOrders[existingIndex].price = parseInt(totalOrders[existingIndex].price) + parseInt(newOrder.price)
@@ -370,14 +673,21 @@ function Order() {
                 orders: totalOrders,
                 table_id: table_id,
                 total_price: totalPrice,
-                guest_count: guestCount
-            };
+                guest_count: guestCount,
+                checkDiscounts: checkDiscounts,
+                total_discount: discounts,
+                total_service_charge: serviceChargeTotal,
+                checkServiceCharges: checkServiceCharges,
+                tax_total: taxTotal
+            }
             console.log("req body", requestBody)
+            const token = localStorage.getItem("token")
             const response = await fetch("http://localhost:5000/orders", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(requestBody)
             })
@@ -390,27 +700,30 @@ function Order() {
         } catch (error) {
             console.error("Hata:", error);
         }
-
-
     };
+
     useEffect(() => {
-        console.log("chosenCategory", chosenCategory.subCategories)
-        console.log("chosenSubCategory", chosenSubCategory)
         const index = chosenCategory?.subCategories?.findIndex(c => c.subCategoryName == chosenSubCategory)
+        console.log("chosenSubCategory", chosenSubCategory)
         chosenCategory?.subCategories?.forEach((category, index) => {
-            if (category.subCategoryName == chosenSubCategory) {
+            if (category.subCategoryName == chosenSubCategory.subCategoryName) {
                 setProducts(category.products)
             }
         })
     }, [chosenSubCategory])
 
-    useEffect(()=>{
-        setProducts(chosenCategory.subCategories?.[0].products)
-    },[chosenCategory])
+
+    useEffect(() => {
+        console.log(products)
+        console.log("chosenCategory",chosenCategory)
+        if(chosenCategory?.subCategories?.length > 1){
+            setProducts(chosenCategory.subCategories?.[0]?.products)
+            setChosenSubCategory(chosenCategory?.subCategories?.[0])
+        }
+    }, [chosenCategory])
 
     function routePaymentScreen() {
         if (totalPrice > 0 && prevOrders.length > 0) {
-            console.log(typeof totalPrice)
             navigate(`/payment/${table_id}`)
         }
     }
@@ -419,8 +732,8 @@ function Order() {
             <div className={staticStyles["middle-bar"]}>
                 <div className={staticStyles["middle-bar-top-bar"]}>
                     <div className={staticStyles["go-back-button"]}>
-                        <button onClick={() => navigate(-1)}>
-                            <i className="bi bi-arrow-return-left"></i>
+                        <button onClick={() => navigate("/tables")}>
+                            <i className="bi bi-arrow-left"></i>
                         </button>
                     </div>
                     <div className={staticStyles["datetime"]}>
@@ -435,16 +748,19 @@ function Order() {
                 <div className={styles["menu-items"]}>
                     <div className={styles["menu-items-sections"]}>
                         {productCategory.map((category, index) => (
-                            <button onClick={() => setChosenCategory(productCategory[index])} > {category.category} </button>
+                            <button style={{ color: category.category == chosenCategory.category ? "#3B82F6" : "" }} onClick={(e) => changeCategory(e, productCategory[index])} > {category.category} </button>
                         ))}
 
                     </div>
 
                     <div className={styles["sub-menu-sections"]}>
                         {chosenCategory.subCategories?.map((category, index) => (
-                            <button onClick={() => setChosenSubCategory(category.subCategoryName)} > {category.subCategoryName} </button>
+                            <button style={{
+                                backgroundColor: category.subCategoryName == chosenSubCategory?.subCategoryName ? "white" : "",
+                                color: category.subCategoryName == chosenSubCategory?.subCategoryName ? "#3B82F6" : ""
+                            }}
+                                onClick={() => setChosenSubCategory(category)}>{category.subCategoryName} </button>
                         ))}
-
                     </div>
 
                     <div className={styles["products"]}>
@@ -455,9 +771,9 @@ function Order() {
                             </div>
                         ) : products && products.length > 0 ? (
                             products.map((product, index) => (
-                                <button 
+                                <button
                                     key={index}
-                                    onClick={(event) => appendOrder(event)}
+                                    onClick={() => appendOrder(index)}
                                     className={styles["product-button"]}
                                     disabled={product.activeness !== "Active"}
                                 >
@@ -483,14 +799,37 @@ function Order() {
 
             <div className={styles["right-bar"]}>
                 <div className={styles["order-menu"]}>
-                    <div className={styles["order-id"]}>
-                        <p>Masa Numarası: <span id="table-id">{table_id}</span></p>
+                    <div onClick={() => setDisplayServiceDiscount(!displayServiceDiscount)} className={styles["order-id"]}>
+                        <div>
+                            <p>Masa Numarası: <span id="table-id">{table_id}</span></p>
+                            {displayServiceDiscount && <div className={styles["service-discounts-input-box-container"]}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+                                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z" />
+                                </svg>
+                                <div className={styles["service-discounts-input-box-options"]}>
+                                    <div onClick={() => { setCheckDiscountOpen(true); setDiscountFor("check") }} className={styles["service-discounts-input-box-option"]} >
+                                        <p>İndirim Uygula</p>
+                                    </div>
+                                    <div onClick={() => setCheckServiceOpen(true)} className={styles["service-discounts-input-box-option"]}>
+                                        <p>Servis Ücreti Uygula</p>
+                                    </div>
+                                    <div className={styles["service-discounts-input-box-option"]}>
+                                        <p>Çek Birleştir</p>
+                                    </div>
+                                    <div className={styles["service-discounts-input-box-option"]}>
+                                        <p>Çek Sil</p>
+                                    </div>
+                                </div>
+                            </div>}
+
+                        </div>
                         <p>Order ID: <span>1</span></p>
                     </div>
+                    <div className={styles["order-details"]} > </div>
                     <div className={styles["order-list"]}>
                         <div className={styles["new-prev-orders"]}>
-                            <button className={styles["new-orders"]} onClick={() => displayOrderTypeChange("new")}>Yeni Siparişler</button>
-                            <button className={styles["prev-orders"]} onClick={() => displayOrderTypeChange("prev")}>Eski Siparişler</button>
+                            <button style={{ backgroundColor: displayOrderType == "new" ? "rgb(75 85 99)" : "" }} className={styles["new-orders"]} onClick={() => displayOrderTypeChange("new")}>Yeni Siparişler</button>
+                            <button style={{ backgroundColor: displayOrderType == "prev" ? "rgb(75 85 99)" : "" }} className={styles["prev-orders"]} onClick={() => displayOrderTypeChange("prev")}>Eski Siparişler</button>
                         </div>
 
 
@@ -502,7 +841,12 @@ function Order() {
                     </div>
                     <div className={styles["order-summary"]}>
                         <div className={styles["order-details"]}>
-                            <p>Total: <span className={`${styles["price"]} ${styles["total-price"]}`}>{totalPrice} ₺</span></p>
+                            <i onClick={() => setShowDiscountService(!showDiscountService)} className="bi bi-arrow-up-short"></i>
+                            {showDiscountService && <div className={styles["service-discounts"]}>
+                                <p>İndirim: {discounts}₺</p>
+                                <p>Servis Ücreti: {serviceChargeTotal}₺</p>
+                            </div>}
+                            <p>Total: <span className={`${styles["price"]} ${styles["total-price"]}`}>{totalPrice}₺</span></p>
                         </div>
 
                         <div className={styles["action-buttons"]}>
@@ -526,10 +870,106 @@ function Order() {
                     </div>
                 </div>
             </div>
-        </div>
+            {checkDiscountOpen && (
+                <div className={styles["product-discount-container"]}>
+                    <div className={styles["product-discount"]}>
+                        <div className={styles["order-note-header"]}>
+                            <h1>İndirim Uygula</h1>
+                        </div>
+                        <div className={styles["defined-discount-types"]}>
+                            <div className={styles["prev-new-discounts"]} >
+                                <button className={newDiscountTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("new")}  >Yeni İndirim</button>
+                                <button className={newDiscountTypes == "prev" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("prev")}>Uygulanan İndirimler</button>
+                            </div>
+                            {newDiscountTypes == "new" ? <>
+                                {staticDiscount.map((discount, index) => (
+                                    <div onClick={() => setChosenDiscount(discount)} className={chosenDiscount == discount ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
+                                        <h1>{discount.discountName}</h1>
+                                        <p> {discount.discountType == "Percentage" ? `Yüzdesel ${discount.discountAmount}%` : `Sabit ${discount.discountAmount} ₺`} </p>
+                                    </div>
+                                ))
+                                }
+                                <div className={styles["manual-discount-input"]}>
+                                    <p>Farklı bir ücret girmek için:</p>
+                                    <input onChange={(e) => setChosenDiscount({ discountAmount: e.target.value, discountName: "Custom Discount", discountType: "Fixed" })} type="number" name="" id="" />
+                                </div></> :
+                                <div className={styles["applied-discount"]}>
+                                    {checkDiscounts.map((discount, checkDiscountIndex) => (
+                                        <div onClick={() => deleteCheckDiscount(checkDiscountIndex)}>
+                                            <p>{discount.discountName}
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                </svg>
+                                            </p>
+                                        </div>
+                                    ))}
 
+                                </div>
+                            }
+                        </div>
+                        <div className={styles["discount-action-buttons"]}>
+                            <div onClick={() => { setCheckDiscountOpen(false); setChosenDiscount() }} className={styles["discount-cancel-new-button"]}>
+                                <button>İptal</button>
+                            </div>
+                            <div onClick={() => saveDiscount(discountFor == "check")} className={styles["discount-save-new-button"]}>
+                                <button>Kaydet</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {checkServiceOpen && (
+                <div className={styles["product-discount-container"]}>
+                    <div className={styles["product-discount"]}>
+                        <div className={styles["order-note-header"]}>
+                            <h1>Servis Ücreti Uygula</h1>
+                        </div>
+                        <div className={styles["defined-discount-types"]}>
+                            <div className={styles["prev-new-discounts"]} >
+                                <button className={newServiceChargeTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewServiceChargeTypes("new")}  >Yeni Servis Ücreti</button>
+                                <button className={newServiceChargeTypes == "prev" ? styles["chosen-discount"] : ""} onClick={() => setNewServiceChargeTypes("prev")}>Uygulanan Servis Ücretleri</button>
+                            </div>
+                            {newServiceChargeTypes == "new" ? <>
+                                {staticServiceCharges.map((charge, index) => (
+                                    console.log("charge", charge),
+                                    <div onClick={() => setChosenServiceCharge(charge)} className={chosenServiceCharge == charge ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
+                                        <h1>{charge.serviceChargeName}</h1>
+                                        <p> {charge.serviceChargeType == "Percentage" ? `Yüzdesel ${charge.serviceChargeAmount}%` : `Sabit ${charge.serviceChargeAmount} ₺`} </p>
+                                    </div>
+                                ))
+                                }
+                                <div className={styles["manual-discount-input"]}>
+                                    <p>Farklı bir ücret girmek için:</p>
+                                    <input onChange={(e) => setChosenServiceCharge({ chosenServiceCharge: e.target.value, serviceChargeName: "Custom Discount", serviceChargeType: "Fixed" })} type="number" name="" id="" />
+                                </div></> :
+                                <div className={styles["applied-discount"]}>
+                                    {checkServiceCharges.map((charge, checkServiceIndex) => (
+                                        <div>
+                                            <p>{charge.serviceChargeName}
+                                                <svg onClick={() => deleteCheckService(checkServiceIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                </svg>
+                                            </p>
+                                        </div>
+                                    ))}
+
+                                </div>
+                            }
+                        </div>
+                        <div className={styles["discount-action-buttons"]}>
+                            <div onClick={() => { setCheckServiceOpen(false); setChosenServiceCharge() }} className={styles["discount-cancel-new-button"]}>
+                                <button>İptal</button>
+                            </div>
+                            <div onClick={() => saveCheckServiceCharge()} className={styles["discount-save-new-button"]}>
+                                <button>Kaydet</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
-
-
 export default Order;
