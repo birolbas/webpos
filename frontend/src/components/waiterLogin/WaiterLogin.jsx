@@ -3,7 +3,7 @@ import WaiterLoginStyles from './waiterLogin.module.css';
 import Tables from '../tables/Tables';
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { customerSettings , getProducts } from '../staticStyle/StaticFetch';
+import { customerSettings  } from '../staticStyle/StaticFetch';
 function WaiterLogin() {
 	const [passWord, setPassWord] = useState('');
 	const [index, setIndex] = useState(0);
@@ -11,15 +11,14 @@ function WaiterLogin() {
 
 	async function getStaticData() {
 		const customer_settings = await customerSettings()
-		const products = await getProducts()
-		console.log(customer_settings)
-		localStorage.setItem("Taxes", JSON.stringify(customer_settings[0].taxes))
-		localStorage.setItem("Menu", JSON.stringify(customer_settings[0].categories))
-		localStorage.setItem("PaymentMethods", JSON.stringify(customer_settings[0].paymentmethods))
-		localStorage.setItem("TableLayout", JSON.stringify(customer_settings[0].tablelayout))
-		localStorage.setItem("Products", JSON.stringify(products[0].products))
-		localStorage.setItem("ServiceCharges", JSON.stringify(customer_settings[0].servicecharges))
-		localStorage.setItem("Discounts", JSON.stringify(customer_settings[0].discounts))
+		console.log("customer_settings", customer_settings.table_layout[0])
+		localStorage.setItem("Taxes", JSON.stringify(customer_settings.taxes))
+		localStorage.setItem("Menu", JSON.stringify(customer_settings.product_categories))
+		localStorage.setItem("PaymentMethods", JSON.stringify(customer_settings.payment_methods))
+		localStorage.setItem("TableLayout", JSON.stringify(customer_settings.table_layout[0].tablelayout))
+		localStorage.setItem("Products", JSON.stringify(customer_settings.products))
+		localStorage.setItem("ServiceCharges", JSON.stringify(customer_settings.service_charges))
+		localStorage.setItem("Discounts", JSON.stringify(customer_settings.discounts))
 	}
 
 	useEffect(()=>{

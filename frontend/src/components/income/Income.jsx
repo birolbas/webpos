@@ -10,14 +10,22 @@ import Payment from '../order/Payment'
 
 function Income() {
     const navigate = useNavigate()
-    const [paymentMethods, setPaymentMethods] = useState(JSON.parse(localStorage.getItem("PaymentMethods")))
-    const [payments, setPayments] = useState({
-        "Kredi Kartı": 0,
-        "Nakit": 0,
-        "Total": 0,
-        "Average Check": 0
-    })
+    const [paymentMethods, setPaymentMethods] = useState([])
+
+    const [total, setTotal] = useState(0)
+    const [net, setNet] = useState(0)
+    const [tax, setTax] = useState(0)
+    const [discountTotal, setDiscountTotal] = useState(0)
+    const [serviceChargeTotal, setServiceChargeTotal] = useState(0)
+    const [checkCount, setCheckCount] = useState(0)
+    const [guestCount, setGuestCount] = useState(0)
+    const [averagePerPerson, setAveragePerPerson] = useState(0)
+    const [averagePerCheck, setAveragePerCheck] = useState(0)
+    const [payments, setPayments] = useState([])
+    const [openTotal, setOpenTotal] = useState(0)
+    const [closedTotal, setClosedTotal] = useState(0)
     const [peakHour, setPeakHour] = useState({})
+
     const [date, setDate] = useState();
     const [displayDetailedIncome, setDisplayDetailedIncome] = useState(false)
     const [restaurant, setRestaurant] = useState()
@@ -42,103 +50,53 @@ function Income() {
             })
             if (response.ok) {
                 const data = await response.json()
+                console.log("data is ", data)
                 const pTypes = {
                     "Total": 0,
                     "Net": 0,
-                    "Tax": 0,
-                    "DiscountTotal": 0,
-                    "ServiceChargeTotal": 0,
                     "CheckCount": 0,
-                    "Guest Count": 0,
                     "Average per Person": 0,
                     "Average per Check": 0,
                     "Payment Methods": paymentMethods,
                     "Peak Hours": [],
-                    "Open Total": 0,
-                    "Closed Total": 0,
                 }
                 pTypes["Payment Methods"].forEach((type, index) => {
                     type["Total"] = 0
                 })
                 console.log("data", data)
-                data.forEach((check, index) => {
-                    pTypes["Tax"] += check[13]
-                    pTypes["Guest Count"] += parseInt(check[7])
-                    pTypes["ServiceChargeTotal"] += check[11]
-                    pTypes["DiscountTotal"] += check[10]
-                    pTypes["CheckCount"] += 1
-                    const time = (check[8])
-                    let [hour, _] = time.split(":")
-                    hour = hour + ":00"
-                    const peakHourData = {
-                        hour: hour,
-                        guestCount: check[7],
-                        income: check[6],
-                    }
-
-
-
-                    if (check[5]?.length > 0) {
-                        check[5].forEach((payment, _) => {
-                            const paymentType = payment.paymentType.name
-                            console.log("SEÇİLEN ÖDEME TYÜRÜ", paymentType)
-                            console.log("PAYMENT", payment)
-                            console.log(pTypes["Payment Methods"])
-                            const methodIndex = pTypes["Payment Methods"].findIndex(p => p.name == paymentType)
-                            console.log("pTypes[Payment Methods][index]", pTypes["Payment Methods"][methodIndex])
-                            console.log("methodIndeasdx", methodIndex)
-                            pTypes["Payment Methods"][methodIndex].Total += parseFloat(payment.payedPrice)
-                            if (payment.paymentType.includedIncome == "Evet") {
-                                pTypes["Total"] += parseFloat(payment.payedPrice)
-                                let existingHour = pTypes["Peak Hours"].find(h => h.hour === hour)
-                                if (existingHour) {
-                                    existingHour.total += parseFloat(check[4])
-                                    existingHour.guestCount += check[7]
-                                } else {
-                                    pTypes["Peak Hours"].push({
-                                        hour: hour,
-                                        guestCount: check[7],
-                                        total: parseFloat(check[4])
-                                    });
-                                }
-                            }
-
-                        })
-                    } else {
-                        pTypes["Total"] += parseFloat(data[index][4])
-
+                let tempClosedTotal = 0
+                let paymentMethodDiscount = 0 
+                data.payments.forEach((p, index)=>{
+                    if(p.includedincome){
+                        tempClosedTotal += p.total_method_money
+                    }else{
+                        paymentMethodDiscount += p.total_method_money
                     }
                 })
-                if ((pTypes["Guest Count"]) == 0) {
-                    pTypes['Average Check'] = pTypes["Total"]
-                } else {
-                    pTypes['Average Check'] = (parseFloat(pTypes["Total"]) / parseFloat(pTypes["Guest Count"])).toFixed(2)
-
-
-                }
-                if (isNaN(pTypes["Average per Person"]) === true) {
-                    pTypes["Average per Person"] = 0
-                }
-
-                let closedSum = 0
-                pTypes["Payment Methods"].forEach((method, _) => {
-                    console.log("method", method)
-                    if (method.includedIncome == "Evet") {
-                        closedSum += parseFloat(method.Total)
-                    }
+                console.log("tempclosedtotal", tempClosedTotal)
+                let tempPaymentMethods = JSON.parse(localStorage.getItem("PaymentMethods"))
+                tempPaymentMethods.forEach((item)=>{
+                    item.total_method_money = 0
                 })
-                pTypes["Closed Total"] = closedSum
-                pTypes["Open Total"] = parseFloat(pTypes["Total"]) - closedSum
-                pTypes["Net"] = pTypes["Total"] - pTypes["Tax"]
-                if (pTypes["CheckCount"] != 0) {
-                    pTypes["Average per Check"] = (pTypes["Total"] / pTypes["CheckCount"]).toFixed(2)
-                }
-                setPayments(pTypes)
-                if (pTypes["Peak Hours"].length > 0) {
-                    const peak = pTypes["Peak Hours"]?.reduce((max, current) =>
-                        current.total > max.total ? current : max
-                    )
-                    setPeakHour(peak)
+
+                const tempTotalPrice = (data.check_info[0].totalmoney)
+                console.log(tempPaymentMethods)
+                setCheckCount(data.check_info[0].totalcheckcount)
+                setClosedTotal(tempClosedTotal.toFixed(2))
+                setOpenTotal((data.check_info[0].totalmoney - tempClosedTotal) || 0)
+                setTax(data.check_info[0].totaltaxes.toFixed(2))
+                setDiscountTotal((data.check_info[0].totaldiscount + paymentMethodDiscount).toFixed(2))
+                setServiceChargeTotal((data.check_info[0].totalservicecharge).toFixed(2))
+                setGuestCount(data.check_info[0].guestcount || 0)
+                setPaymentMethods(data.payments.length > 0 ? data.payments : tempPaymentMethods)
+                setNet((tempTotalPrice - data.check_info[0].totaltaxes).toFixed(2))
+                setTotal(tempTotalPrice.toFixed(2))
+                setAveragePerCheck((tempTotalPrice / data.check_info[0].totalcheckcount).toFixed(2) || 0)
+                setPeakHour(data.busiest_hours[0])
+                if(data.check_info[0].guestcount == 0){
+                    setAveragePerPerson(tempTotalPrice)
+                }else{
+                    setAveragePerPerson(tempTotalPrice / data.check_info[0].guestcount)
                 }
             }
         }
@@ -147,6 +105,9 @@ function Income() {
         }
 
     }
+    useEffect(()=>{
+        console.log("peak hour", peakHour)
+    },[peakHour])
     useEffect(() => {
         const now = new Date();
         const year = now.getFullYear();
@@ -157,7 +118,9 @@ function Income() {
         getDailyFromDB(date);
         setRestaurant(localStorage.getItem("Restaurant"))
     }, [])
-
+    useEffect(()=>{
+        console.log("paymentMethods", paymentMethods)
+    },[paymentMethods])
     function displayMonthlyIncome() {
         const now = new Date();
         const year = now.getFullYear();
@@ -167,7 +130,9 @@ function Income() {
         console.log([date2, date])
         getDailyFromDB([date2, date]);
     }
-
+    useEffect(()=>{
+        console.log(date)
+    },[date])
     return (
         <div style={{ overflow: "auto" }} className={staticStyles["containers"]}>
             <div style={{ width: "100%" }} className={staticStyles["middle-bar"]}>
@@ -185,12 +150,12 @@ function Income() {
                     <div className={styles["income-summary"]}>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Ciro</p>
-                            <p className={styles["summary-data"]}>{payments["Total"]}₺</p>
-                            <p className={styles["last-week-comp"]}> Açık Çekler: {payments["Open Total"]}₺ Kapalı Çekler: {payments["Closed Total"]}₺</p>
+                            <p className={styles["summary-data"]}>{total}₺</p>
+                            <p className={styles["last-week-comp"]}> Açık Çekler: {openTotal}₺ Kapalı Çekler: {closedTotal}₺</p>
                         </div>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Toplam Müşteri</p>
-                            <p className={styles["summary-data"]}>{payments["Guest Count"]} Kişi</p>
+                            <p className={styles["summary-data"]}>{guestCount} Kişi</p>
                             <p className={styles["last-week-comp"]}>
                             </p>
                         </div>
@@ -198,15 +163,15 @@ function Income() {
                     <div className={styles["income-summary"]}>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>Müşteri Başına Ortalama</p>
-                            <p className={styles["summary-data"]}>{payments["Average Check"]}₺</p>
+                            <p className={styles["summary-data"]}>{averagePerPerson.toFixed(2)}₺</p>
                             <p className={styles["last-week-comp"]}>
 
                             </p>
                         </div>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>En Yoğun Saat</p>
-                            <p className={styles["summary-data"]}>{peakHour.hour}</p>
-                            <p className={styles["last-week-comp"]}> {peakHour.guestCount} müşteri ile {peakHour.total}₺ ciro. </p>
+                            <p className={styles["summary-data"]}>{peakHour.hour}:00</p>
+                            <p className={styles["last-week-comp"]}> {peakHour.total_guest_count} müşteri ile {peakHour.total_method_money}₺ ciro. </p>
                         </div>
                     </div>
                 </div>
@@ -215,11 +180,12 @@ function Income() {
                     <div className={`${styles["method"]} ${styles["summary-headers"]}`}>
                         <p className={styles["summary-headers"]}>Ödeme Şekilleri</p>
                         {paymentMethods.map((method, index) => {
-                            if (method.includedIncome == "Evet") {
+                            if (method.includedincome == true) {
+                                console.log(method)
                                 return <>
                                     <div className={styles["payment-method"]}>
                                         <p>{method.name}</p>
-                                        <p className={styles["payment-amount"]}>{method.Total}₺</p>
+                                        <p className={styles["payment-amount"]}>{method.total_method_money}₺</p>
                                     </div>
                                 </>
                             }
@@ -230,12 +196,12 @@ function Income() {
 
                 <div className={styles["action-buttons-container"]}>
                     <div className={styles["action-buttons"]}>
-                        <button onClick={() => setDisplayCalendar(!displayCalendar)} style={{ backgroundColor: "#14b8a6" }}>Tarih Seç</button>
-                        <button onClick={() => displayMonthlyIncome()} style={{ backgroundColor: "#f97316" }}>Aylık</button>
-                    </div>
-                    <div className={styles["action-buttons"]}>
+                        <button style={{width:"100%"}} onClick={() => setDisplayCalendar(!displayCalendar)} style={{ backgroundColor: "#16A34A  " }}>Tarih Seç</button>
+                        <button onClick={() => displayMonthlyIncome()} style={{ backgroundColor: "#DC2626" }}>Aylık</button>
                         <button onClick={() => setDisplayDetailedIncome(!displayDetailedIncome)} style={{ backgroundColor: "#6366f1" }}>Detaylı Rapor</button>
-                        <button style={{ backgroundColor: "#ec4899" }}>Yazdır</button>
+                        <button style={{ backgroundColor: "#9333EA" }}>Yazdır</button>
+                    </div>
+                    <div  className={styles["action-buttons"]}>
                     </div>
                 </div>
                 {displayCalendar && (
@@ -262,24 +228,31 @@ function Income() {
                         <h1>Detaylı Rapor</h1>
                     </div>
                     <div className={styles["detailed-income-dates"]}>
+                        {Array.isArray(date) ? 
+                        <>
                         <p>Başlangıç Tarihi <span> {date[0]} </span> </p>
                         <p>Bitiş Tarihi <span> {date[1]} </span></p>
+                        </>
+                        :<>
+                        <p>Başlangıç Tarihi <span> {date} </span> </p>
+                        <p>Bitiş Tarihi <span> {date} </span></p>
+                        </> }
                         <p>İşletme <span> {restaurant} </span> </p>
                     </div>
                     <div className={styles["income-details"]}>
-                        <p>Brüt <span>{payments["Total"]}₺</span></p>
-                        <p>Net <span> {payments["Net"]}₺ </span></p>
-                        <p>Vergi <span> {payments["Tax"].toFixed(2)}₺ </span> </p>
-                        <p>İndirim <span> {payments["DiscountTotal"]}₺ </span></p>
-                        <p>Servis Ücreti <span> {payments["ServiceChargeTotal"]}₺ </span></p>
-                        <p>Hesap Sayısı <span> {payments["CheckCount"]} </span></p>
-                        <p>Müşteri Sayısı <span>{payments["Guest Count"]}</span></p>
-                        <p>Müşteri Başına Tutar <span>{payments["Average per Person"]}₺</span></p>
-                        <p>Ortalama Hesap Tutarı <span>{payments["Average per Check"]}₺</span> </p>
+                        <p>Brüt <span>{total}₺</span></p>
+                        <p>Net <span> {net}₺ </span></p>
+                        <p>Vergi <span> {tax}₺ </span> </p>
+                        <p>İndirim <span> {discountTotal}₺ </span></p>
+                        <p>Servis Ücreti <span> {serviceChargeTotal}₺ </span></p>
+                        <p>Hesap Sayısı <span> {checkCount} Adet </span></p>
+                        <p>Müşteri Sayısı <span> {guestCount}</span></p>
+                        <p>Müşteri Başına Tutar <span>{averagePerPerson.toFixed(2)}₺</span></p>
+                        <p>Ortalama Hesap Tutarı <span>{averagePerCheck}₺</span> </p>
                     </div>
                     <div className={styles["payment-details"]}>
-                        {payments["Payment Methods"].map((method, index) => (
-                            <p>{method.name} <span> {method.Total}₺ </span> </p>
+                        {paymentMethods?.map((method, index) => (
+                            <p>{method.name} <span> {method.total_method_money}₺ </span> </p>
                         ))}
                     </div>
 

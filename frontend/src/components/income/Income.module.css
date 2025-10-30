@@ -56,10 +56,15 @@
     padding: 0rem 1rem 0rem ;
 }
 .action-buttons-container button{
-    width: 48%;
+    width: 100%;
     font-size: 18px;
     font-weight: bold;
     color: white;
+}
+.action-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:2rem;
 }
 .calendar{
     display: block;

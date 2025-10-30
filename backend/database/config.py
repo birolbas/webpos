@@ -17,7 +17,7 @@ DATABASE_CONFIG = {
     "host": "localhost",
     "dbname": "restowebpos", 
     "user": "postgres",
-    "password": "1",
+    "password": "kedi7beni",
     "port": 5432,
     "options": "-c client_encoding=utf8"
 }

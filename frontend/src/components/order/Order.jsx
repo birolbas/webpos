@@ -1,4 +1,4 @@
-import {  useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from 'react-router-dom'
 import Tables from "../tables/Tables"
 import Settings from "../settings/Settings"
@@ -20,7 +20,7 @@ function Order() {
     const [totalPrice, setTotalPrice] = useState(0);
     const [productCategory, setProductCategory] = useState([])
     const [products, setProducts] = useState([])
-    const [chosenCategory, setChosenCategory] = useState([])
+    const [chosenCategory, setChosenCategory] = useState()
     const [chosenSubCategory, setChosenSubCategory] = useState()
     const [guestCount, setGuestCount] = useState(0)
     const [taxTotal, setTaxTotal] = useState(0)
@@ -42,7 +42,8 @@ function Order() {
     const [discountFor, setDiscountFor] = useState("item")
     const [discounts, setDiscounts] = useState(0)
     const [newDiscountTypes, setNewDiscountTypes] = useState("new")
-    const [itemDiscountIndex, setItemDiscountIndex] = useState(null)
+
+    const [itemDiscountIndex, setItemDiscountIndex] = useState([null, null])
     const [checkDiscountOpen, setCheckDiscountOpen] = useState(false)
 
     const [chosenServiceCharge, setChosenServiceCharge] = useState()
@@ -64,7 +65,6 @@ function Order() {
                 })
                 if (getOrdersResponse.ok) {
                     const getOrdersData = await getOrdersResponse.json()
-                    
                     setDiscounts(parseFloat(getOrdersData[0].total_discount))
                     setServiceChargeTotal(parseFloat(getOrdersData[0].total_service_charge))
                     setCheckServiceCharges(getOrdersData[0].checkservicecharges)
@@ -88,21 +88,31 @@ function Order() {
     const onMount = () => {
         try {
             const staticCategory = JSON.parse(localStorage.getItem("Menu"))
+            console.log("staticCategory", staticCategory)
             const staticProducts = JSON.parse(localStorage.getItem("Products"))
+            console.log("discounts ", JSON.parse(localStorage.getItem("Discounts")))
             setStaticDiscount(JSON.parse(localStorage.getItem("Discounts")))
+            console.log("staticservice", JSON.parse(localStorage.getItem("ServiceCharges")))
+
             setStaticServiceCharges(JSON.parse(localStorage.getItem("ServiceCharges")))
             if (!staticCategory || !staticProducts) {
                 console.error("Menu or Products data not found in localStorage")
                 setIsLoading(false)
                 return
             }
+            setProductCategory(staticCategory)
+            setProducts(staticProducts)
+            console.log("category", staticCategory)
+            console.log("firstuppercategoryfirstuppercategoryfirstuppercategoryfirstuppercategory", staticCategory.filter(c => c.ui_index == 0))
 
-            console.log("staticProducts", staticProducts)
-            console.log(staticCategory[0].categoryName)
-            const tempCategories = []
-            console.log("categories", staticCategory)
+            const firstUpperCategory = staticCategory.filter(c => c.ui_index == 0)[0].id
+            console.log("firstuppercategory", firstUpperCategory)
+            setChosenCategory(firstUpperCategory)
+            const firstSubCategory = staticCategory.filter(c => c.parent_id == firstUpperCategory)[0]?.id
+            console.log("firstSubCategory", firstSubCategory)
+            setChosenSubCategory(firstSubCategory)
 
-            staticCategory.forEach((item, index) => {
+            /*staticCategory.forEach((item, index) => {
                 const category = item.categoryName
                 const subCategoryProducts = []
                 if (item.subCategories.length > 0) {
@@ -129,8 +139,8 @@ function Order() {
                     }
                     tempCategories.push(object)
                 }
-            })
-            console.log("asd", tempCategories)
+            })*/
+            /*console.log("asd", tempCategories)
             setProductCategory(tempCategories)
             if (tempCategories.length > 0) {
                 setChosenCategory(tempCategories[0])
@@ -140,7 +150,7 @@ function Order() {
                 } else if (tempCategories[0].products) {
                     setProducts(tempCategories[0].products)
                 }
-            }
+            }*/
         } catch (error) {
             console.error("Error loading menu data:", error)
         } finally {
@@ -154,29 +164,38 @@ function Order() {
     useEffect(() => {
         console.log("taxTotal", taxTotal)
     }, [taxTotal])
-    function appendOrder(index) {
+    useEffect(() => {
+        console.log("itemdiscountindex", itemDiscountIndex)
+    }, [itemDiscountIndex])
+    function appendOrder(product) {
+        const productName = product.name
+        const productPrice = product.price
+        const taxPercent = product.tax_percent
         setDisplayOrderType("new");
-        const productName = products[index].name
-        const productPrice = Number(products[index].price)
         const new_date = new Date();
+        console.log("asdfsdfa", product)
         const time = (new_date.toLocaleTimeString('tr-TR', { hour: "numeric", minute: "numeric" }))
-        const taxPercent = products[index].tax.taxPercent
         const existingIndex = newOrders.findIndex(order => order.name === productName && order.note == undefined && order.onHouse == undefined)
         if (existingIndex !== -1) {
+            console.log("-1")
             const updatedOrders = [...newOrders]
             updatedOrders[existingIndex].amount += 1
             updatedOrders[existingIndex].price += productPrice
             updatedOrders[existingIndex].time = time
             setNewOrders(updatedOrders)
-
+            console.log("neworders", newOrders)
         } else {
             const newOrder = {
+                id: product.id,
                 amount: 1,
                 name: productName,
                 price: productPrice,
                 discounts: [],
-                time: time
-            };
+                time: time,
+                related_recipe_id: product.related_recipe_id,               
+                taxPercent: taxPercent
+            }
+            console.log("neworders", newOrders)
             setNewOrders([...newOrders, newOrder]);
         }
         const tax = Number((productPrice * (taxPercent / (100 + taxPercent))).toFixed(2))
@@ -295,44 +314,53 @@ function Order() {
         setNewOrders(tempNewOrders)
         setAddDescription(false)
     }
+    useEffect(() => {
+        console.log("cd", checkDiscounts)
+    }, [checkDiscounts])
 
     function saveDiscount(discountForWhat, index, groupIndex) {
         const updateOrderDiscountsForItem = (orders, setOrders) => {
             console.log("index is ", index, groupIndex)
             const tempOrders = displayOrderType == "prev" ? { ...groupedPrevOrdersByTime } : [...orders]
-            const order = tempOrders[groupIndex][index]
+            const order = displayOrderType == "prev" ? tempOrders[groupIndex][index] : tempOrders[index]
             console.log(order)
             if (!order.discounts) {
                 order.discounts = []
                 order.discountedPrice = order.price
             }
-            order.discounts.push(chosenDiscount)
-            if (chosenDiscount.discountType == "Fixed") {
-                order.discountedPrice = order.price - chosenDiscount.discountAmount
-                setTotalPrice(totalPrice - chosenDiscount.discountAmount)
-                setDiscounts(discounts + chosenDiscount.discountAmount)
+            const tempChosenDiscount = chosenDiscount
+            if (chosenDiscount.is_fixed) {
+                tempChosenDiscount.discountAmount = chosenDiscount.amount
+                order.discountedPrice = order.price - chosenDiscount.amount
+                setTotalPrice(totalPrice - chosenDiscount.amount)
+                setDiscounts(discounts + chosenDiscount.amount)
 
             }
             else {
-                order.discountedPrice = order.price - (order.price * chosenDiscount.discountAmount / 100)
-                setDiscounts(discounts + order.price * chosenDiscount.discountAmount / 100)
-                setTotalPrice(totalPrice - (order.price * chosenDiscount.discountAmount / 100))
+                tempChosenDiscount.discountAmount = order.price * chosenDiscount.amount / 100
+                order.discountedPrice = order.price - (order.price * chosenDiscount.amount / 100)
+                setDiscounts(discounts + order.price * chosenDiscount.amount / 100)
+                setTotalPrice(totalPrice - (order.price * chosenDiscount.amount / 100))
             }
+            order.discounts.push(tempChosenDiscount)
             setOrders(tempOrders);
             setChosenDiscount()
             setAddDiscount(false);
         }
         const updateOrderDiscountsForCheck = () => {
-            setCheckDiscounts(prev => (
-                [...prev, chosenDiscount]
-            ))
-            if (chosenDiscount.discountType == "Fixed") {
-                setDiscounts(discounts + chosenDiscount.discountAmount)
-                setTotalPrice(totalPrice - chosenDiscount.discountAmount)
+            let tempChosenDiscount = chosenDiscount
+            if (chosenDiscount.is_fixed) {
+                tempChosenDiscount.discountAmount = chosenDiscount.amount
+                setDiscounts(discounts + chosenDiscount.amount)
+                setTotalPrice(totalPrice - chosenDiscount.amount)
             } else {
-                setDiscounts(discounts + totalPrice * (chosenDiscount.discountAmount / 100))
-                setTotalPrice(totalPrice - totalPrice * (chosenDiscount.discountAmount / 100))
+                tempChosenDiscount.discountAmount = totalPrice * (chosenDiscount.amount / 100)
+                setDiscounts(discounts + totalPrice * (chosenDiscount.amount / 100))
+                setTotalPrice(totalPrice - totalPrice * (chosenDiscount.amount / 100))
             }
+            setCheckDiscounts(prev => (
+                [...prev, tempChosenDiscount]
+            ))
             setChosenDiscount()
             setAddDiscount(false)
 
@@ -375,13 +403,35 @@ function Order() {
 
     function deleteCheckDiscount(index) {
         const tempCheckDiscounts = [...checkDiscounts]
+        setTotalPrice(totalPrice + tempCheckDiscounts[index].discountAmount)
         tempCheckDiscounts.splice(index, 1)
         setCheckDiscounts(tempCheckDiscounts)
+    }
+    function deleteItemDiscount(group_index, index, discountIndex) {
+        if (displayOrderType == "prev") {
+            const orders = { ...groupedPrevOrdersByTime }
+            console.log(group_index)
+            console.log(orders[group_index][index].discounts[index])
 
+            orders[group_index][index].discountedPrice += orders[group_index][index].discounts[discountIndex].discountAmount
+
+            if (orders[group_index][index].discountedPrice == orders[group_index][index].price) {
+                console.log("eşit")
+                delete orders[group_index][index].discountedPrice
+            }
+            orders[group_index][index].discounts.splice(discountIndex, 1)
+            setGroupedPrevOrdersByTime(orders)
+        } else {
+            const orders = [...newOrders]
+        }
     }
     useEffect(() => {
-        console.log("checkServiceCharges", chosenServiceCharge)
-    }, [chosenServiceCharge])
+        console.log(groupedPrevOrdersByTime)
+    }, [groupedPrevOrdersByTime])
+    useEffect(() => {
+        console.log("type", typeof (totalPrice))
+        console.log("totalprice", totalPrice)
+    }, [totalPrice])
     function onHouse(index, groupIndex) {
         if (displayOrderType == "prev") {
             console.log("asd")
@@ -437,8 +487,9 @@ function Order() {
 
                     <div className={styles["price"]}>
                         {order.onHouse ?
-                            <span>İKRAM</span> : <span>{order["price"]} ₺</span>
+                            (<span>İKRAM</span>) : (order.discountedPrice ? <><del>{order["price"]} ₺</del> <span>{order["discountedPrice"]}₺</span></> : <span>{order["price"]}₺</span>)
                         }
+
                     </div>
 
                     <div className={styles["order-item-actions"]}>
@@ -452,7 +503,7 @@ function Order() {
                         <button onClick={() => { setAddDescription(!addDescription), closeAllActions() }}>
                             <i className="bi bi-file-text"> </i>
                         </button>
-                        <button>
+                        <button onClick={() => setItemDiscountIndex(index)}>
                             <i className="bi bi-percent"></i>
                         </button>
                         <button onClick={() => onHouse(index)} >
@@ -465,6 +516,65 @@ function Order() {
                             <i className="bi bi-x-circle"></i>
                         </button>
                     </div>
+                    {itemDiscountIndex == index && (
+                        <div id={`new-${index}`} className={styles["product-discount-container"]}>
+                            <div className={styles["product-discount"]}>
+                                <div className={styles["order-note-header"]}>
+                                    <h1>İndirim Uygula</h1>
+                                </div>
+                                <div className={styles["defined-discount-types"]}>
+                                    <div className={styles["prev-new-discounts"]} >
+                                        <button className={newDiscountTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("new")} >Yeni İndirim</button>
+                                        <button className={newDiscountTypes == "prev" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("prev")}>Uygulanan İndirimler</button>
+                                    </div>
+                                    {newDiscountTypes == "new" ? <>
+                                        {staticDiscount.map((discount, index) => (
+                                            <div onClick={() => setChosenDiscount(discount)} className={chosenDiscount == discount ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
+                                                <h1>{discount.name}</h1>
+                                                <p> {discount.is_fixed ? `Sabit ${discount.amount}%` : `Yüzdesel ${discount.amount} ₺`} </p>
+                                            </div>
+                                        ))
+                                        }
+                                        <div className={styles["manual-discount-input"]}>
+                                            <p>Farklı bir ücret girmek için:</p>
+                                            <input value="Tutar giriniz.." onChange={(e) => setChosenDiscount({ discountAmount: e.target.value, discountName: "Custom Discount", discountType: "Fixed" })} type="number" name="" id="" />
+                                        </div></> :
+                                        <div className={styles["applied-discount"]}>
+                                            {discountFor == "item" ? order?.discounts?.map((discount, itemDiscountIndex) => (
+                                                <div>
+                                                    <p>{discount.name}
+                                                        <svg onClick={() => deleteItemDiscount(null, index, itemDiscountIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                        </svg>
+                                                    </p>
+                                                </div>
+                                            )) : checkDiscounts.map((discount, checkDiscountIndex) => (
+                                                <div onClick={() => deleteCheckDiscount(checkDiscountIndex)}>
+                                                    <p>{discount.name}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                        </svg>
+                                                    </p>
+                                                </div>
+                                            ))}
+
+                                        </div>
+                                    }
+                                </div>
+                                <div className={styles["discount-action-buttons"]}>
+                                    <div onClick={() => { setItemDiscountIndex([null, null]); setChosenDiscount() }} className={styles["discount-cancel-new-button"]}>
+                                        <button>İptal</button>
+                                    </div>
+                                    <div onClick={() => saveDiscount("item", index, null)} className={styles["discount-save-new-button"]}>
+                                        <button>Kaydet</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                    }
                     {addDescription &&
                         <div id={`new-${index}`} className={styles["order-note-container"]}>
                             <div className={styles["order-notes"]}>
@@ -544,7 +654,7 @@ function Order() {
                             </div>
 
                             <div id={`prev-${index}`} className={styles["order-item-actions-box"]}>
-                                <button onClick={() => { setItemDiscountIndex(index, groupOrders[0]), setDiscountFor("item"), closeAllActions() }}>
+                                <button onClick={() => { setItemDiscountIndex([groupOrders[0], index]), setDiscountFor("item"), closeAllActions() }}>
                                     <i className="bi bi-percent"></i>
                                 </button>
                                 <button onClick={() => { onHouse(index, groupOrders[0]), closeAllActions() }}>
@@ -557,7 +667,7 @@ function Order() {
                                     <i className="bi bi-x-circle"></i>
                                 </button>
                             </div>
-                            {itemDiscountIndex == index && (
+                            {itemDiscountIndex[0] == groupOrders[0] && itemDiscountIndex[1] == index && (
                                 <div id={`prev-${index}`} className={styles["product-discount-container"]}>
                                     <div className={styles["product-discount"]}>
                                         <div className={styles["order-note-header"]}>
@@ -565,14 +675,14 @@ function Order() {
                                         </div>
                                         <div className={styles["defined-discount-types"]}>
                                             <div className={styles["prev-new-discounts"]} >
-                                                <button className={newDiscountTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("new")}  >Yeni İndirim</button>
+                                                <button className={newDiscountTypes == "new" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("new")} >Yeni İndirim</button>
                                                 <button className={newDiscountTypes == "prev" ? styles["chosen-discount"] : ""} onClick={() => setNewDiscountTypes("prev")}>Uygulanan İndirimler</button>
                                             </div>
                                             {newDiscountTypes == "new" ? <>
                                                 {staticDiscount.map((discount, index) => (
                                                     <div onClick={() => setChosenDiscount(discount)} className={chosenDiscount == discount ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
-                                                        <h1>{discount.discountName}</h1>
-                                                        <p> {discount.discountType == "Percentage" ? `Yüzdesel ${discount.discountAmount}%` : `Sabit ${discount.discountAmount} ₺`} </p>
+                                                        <h1>{discount.name}</h1>
+                                                        <p> {discount.is_fixed ? `Sabit ${discount.amount}%` : `Yüzdesel ${discount.amount} ₺`} </p>
                                                     </div>
                                                 ))
                                                 }
@@ -583,8 +693,8 @@ function Order() {
                                                 <div className={styles["applied-discount"]}>
                                                     {discountFor == "item" ? order?.discounts?.map((discount, itemDiscountIndex) => (
                                                         <div>
-                                                            <p>{discount.discountName}
-                                                                <svg onClick={() => deleteItemDiscount(itemDiscountIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                            <p>{discount.name}
+                                                                <svg onClick={() => deleteItemDiscount(groupOrders[0], index, itemDiscountIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                                                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                                                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                                                                 </svg>
@@ -592,7 +702,7 @@ function Order() {
                                                         </div>
                                                     )) : checkDiscounts.map((discount, checkDiscountIndex) => (
                                                         <div onClick={() => deleteCheckDiscount(checkDiscountIndex)}>
-                                                            <p>{discount.discountName}
+                                                            <p>{discount.name}aasdfasdf
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                                                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                                                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
@@ -605,7 +715,7 @@ function Order() {
                                             }
                                         </div>
                                         <div className={styles["discount-action-buttons"]}>
-                                            <div onClick={() => { setItemDiscountIndex(null); setChosenDiscount() }} className={styles["discount-cancel-new-button"]}>
+                                            <div onClick={() => { setItemDiscountIndex([null, null]); setChosenDiscount() }} className={styles["discount-cancel-new-button"]}>
                                                 <button>İptal</button>
                                             </div>
                                             <div onClick={() => saveDiscount("item", index, groupOrders[0])} className={styles["discount-save-new-button"]}>
@@ -623,20 +733,6 @@ function Order() {
         </>
     }
 
-
-
-    function changeCategory(e, pCategory) {
-        const categoryName = e.target.textContent
-        const index = productCategory.findIndex(p => p.category == categoryName)
-        console.log("productCategory", index)
-        setChosenCategory(pCategory)
-        if(pCategory.subCategories.length > 0){
-            setChosenSubCategory(productCategory[index].subCategories[0])
-        }else{
-            setChosenSubCategory()
-            setProducts(pCategory.products)
-        }
-    }
 
     const setOrderToDB = async (isDelete) => {
         const totalOrders = []
@@ -702,25 +798,12 @@ function Order() {
         }
     };
 
-    useEffect(() => {
-        const index = chosenCategory?.subCategories?.findIndex(c => c.subCategoryName == chosenSubCategory)
-        console.log("chosenSubCategory", chosenSubCategory)
-        chosenCategory?.subCategories?.forEach((category, index) => {
-            if (category.subCategoryName == chosenSubCategory.subCategoryName) {
-                setProducts(category.products)
-            }
-        })
-    }, [chosenSubCategory])
-
-
-    useEffect(() => {
-        console.log(products)
-        console.log("chosenCategory",chosenCategory)
-        if(chosenCategory?.subCategories?.length > 1){
-            setProducts(chosenCategory.subCategories?.[0]?.products)
-            setChosenSubCategory(chosenCategory?.subCategories?.[0])
-        }
-    }, [chosenCategory])
+    function changeCategory(category_id) {
+        setChosenCategory(category_id)
+        const firstSubCategory = productCategory.filter(sc => sc.parent_id == category_id)[0]?.id
+        setChosenSubCategory(firstSubCategory)
+        console.log("first sub", firstSubCategory)
+    }
 
     function routePaymentScreen() {
         if (totalPrice > 0 && prevOrders.length > 0) {
@@ -747,19 +830,21 @@ function Order() {
 
                 <div className={styles["menu-items"]}>
                     <div className={styles["menu-items-sections"]}>
-                        {productCategory.map((category, index) => (
-                            <button style={{ color: category.category == chosenCategory.category ? "#3B82F6" : "" }} onClick={(e) => changeCategory(e, productCategory[index])} > {category.category} </button>
+                        {productCategory.filter(sc => sc.parent_id == null).sort((a, b) => a.ui_index - b.ui_index).map((category, index) => (
+                            <button style={{backgroundColor: category.id == chosenCategory ? "#3B82F6" : "",
+                                            color: category.id == chosenCategory ? "white" : ""}} onClick={() => changeCategory(category.id)} > {category.name} </button>
                         ))}
 
                     </div>
 
                     <div className={styles["sub-menu-sections"]}>
-                        {chosenCategory.subCategories?.map((category, index) => (
+                        {productCategory.filter(sc => sc.parent_id == chosenCategory).map((category, index) => (
                             <button style={{
-                                backgroundColor: category.subCategoryName == chosenSubCategory?.subCategoryName ? "white" : "",
-                                color: category.subCategoryName == chosenSubCategory?.subCategoryName ? "#3B82F6" : ""
+                                backgroundColor: category.id == chosenSubCategory ? "#3B82F6" : "",
+                                color: category.id == chosenSubCategory ? "white" : ""
+
                             }}
-                                onClick={() => setChosenSubCategory(category)}>{category.subCategoryName} </button>
+                                onClick={() => setChosenSubCategory(category.id)}>{category.name} </button>
                         ))}
                     </div>
 
@@ -770,14 +855,13 @@ function Order() {
                                 <p>Menü yükleniyor...</p>
                             </div>
                         ) : products && products.length > 0 ? (
-                            products.map((product, index) => (
+                            products.filter(p => chosenSubCategory !== undefined ? p.category_id === chosenSubCategory : p.category_id === chosenCategory).map((product, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => appendOrder(index)}
+                                    onClick={() => appendOrder(product)}
                                     className={styles["product-button"]}
-                                    disabled={product.activeness !== "Active"}
                                 >
-                                    {product.activeness === "Active" ? (
+                                    {product.activeness === true ? (
                                         <>
                                             <span className={styles["product-name"]} id="product-name">{product.name}</span>
                                             <span className={styles["product-price"]} id="product-price">{product.price}</span>
@@ -804,7 +888,7 @@ function Order() {
                             <p>Masa Numarası: <span id="table-id">{table_id}</span></p>
                             {displayServiceDiscount && <div className={styles["service-discounts-input-box-container"]}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
-                                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z" />
+                                    <path  d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z" />
                                 </svg>
                                 <div className={styles["service-discounts-input-box-options"]}>
                                     <div onClick={() => { setCheckDiscountOpen(true); setDiscountFor("check") }} className={styles["service-discounts-input-box-option"]} >
@@ -884,8 +968,8 @@ function Order() {
                             {newDiscountTypes == "new" ? <>
                                 {staticDiscount.map((discount, index) => (
                                     <div onClick={() => setChosenDiscount(discount)} className={chosenDiscount == discount ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
-                                        <h1>{discount.discountName}</h1>
-                                        <p> {discount.discountType == "Percentage" ? `Yüzdesel ${discount.discountAmount}%` : `Sabit ${discount.discountAmount} ₺`} </p>
+                                        <h1>{discount.name}</h1>
+                                        <p> {discount.is_fixed ? `Sabit ${discount.amount}₺` : `Yüzdesel ${discount.amount}%`} </p>
                                     </div>
                                 ))
                                 }
@@ -896,7 +980,7 @@ function Order() {
                                 <div className={styles["applied-discount"]}>
                                     {checkDiscounts.map((discount, checkDiscountIndex) => (
                                         <div onClick={() => deleteCheckDiscount(checkDiscountIndex)}>
-                                            <p>{discount.discountName}
+                                            <p>{discount.name}
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
@@ -934,17 +1018,17 @@ function Order() {
                                 {staticServiceCharges.map((charge, index) => (
                                     console.log("charge", charge),
                                     <div onClick={() => setChosenServiceCharge(charge)} className={chosenServiceCharge == charge ? `${styles["defined-discount-active"]} ${styles["defined-discount"]}` : styles["defined-discount"]}>
-                                        <h1>{charge.serviceChargeName}</h1>
-                                        <p> {charge.serviceChargeType == "Percentage" ? `Yüzdesel ${charge.serviceChargeAmount}%` : `Sabit ${charge.serviceChargeAmount} ₺`} </p>
+                                        <h1>{charge.name}</h1>
+                                        <p> {charge.is_fixed ? `Sabit ${charge.amount} ₺` : `Yüzdesel ${charge.amount}%` } </p>
                                     </div>
                                 ))
                                 }
                                 <div className={styles["manual-discount-input"]}>
                                     <p>Farklı bir ücret girmek için:</p>
-                                    <input onChange={(e) => setChosenServiceCharge({ chosenServiceCharge: e.target.value, serviceChargeName: "Custom Discount", serviceChargeType: "Fixed" })} type="number" name="" id="" />
+                                    <input placeholder="Tutar Giriniz.." onChange={(e) => setChosenServiceCharge({ chosenServiceCharge: e.target.value, serviceChargeName: "Custom Discount", serviceChargeType: "Fixed" })} type="number" name="" id="" />
                                 </div></> :
                                 <div className={styles["applied-discount"]}>
-                                    {checkServiceCharges.map((charge, checkServiceIndex) => (
+                                    {checkServiceCharges.length > 0 ? (checkServiceCharges.map((charge, checkServiceIndex) => (
                                         <div>
                                             <p>{charge.serviceChargeName}
                                                 <svg onClick={() => deleteCheckService(checkServiceIndex)} xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -952,8 +1036,12 @@ function Order() {
                                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                                                 </svg>
                                             </p>
-                                        </div>
-                                    ))}
+                                        </div>)
+                                    )): 
+                                    <div>
+                                        <p> Uygulanmış indirim bulunmamakta..
+                                        </p>
+                                    </div>}
 
                                 </div>
                             }

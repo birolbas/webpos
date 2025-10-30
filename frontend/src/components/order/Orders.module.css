@@ -11,7 +11,8 @@ i{
 .menu-items-sections {
     display: flex;
     gap: 1rem;
-    border-bottom: 5px solid rgba(34, 33, 33, 0.1);
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(34, 33, 33, 0.1);
     margin-bottom: 1rem;
 }
 
@@ -29,24 +30,24 @@ i{
 .menu-items-sections button {
     width: auto;
     margin: 0px;
-    padding: 0.5rem 1.5rem;
+    padding: 0.5rem 1rem;
     background-color: white;
     font-weight: 600;
     color: rgb(107 114 128 );
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1.5rem;
-    border-radius: 0px !important;
+    font-size: 1.6rem;
+    border-radius: 0.5rem !important;
+    border: 1px solid rgba(34, 33, 33, 0.1);
+
 }
 .sub-menu-sections {
     display: flex;
     gap: 1rem;
     padding: 0rem 1rem 0rem 1rem;
-    border-bottom: 5px solid rgba(255, 255, 255, 0.1);
 }
 .sub-menu-sections p{
     padding: 0.5rem 1.5rem;
-    border-radius: 25px;
     background-color: white;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -58,13 +59,14 @@ i{
 .sub-menu-sections button {
     width: auto;
     margin: 0px;
-    padding: 0.5rem 1.5rem;
-    border-radius: 25px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
     font-weight: 600;
     color: rgb(107 114 128 );
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 1rem;
+    border: 1px solid rgba(34, 33, 33, 0.1);
     
 }
 
@@ -81,7 +83,6 @@ i{
 
 .products button {
     color: black;
-    border: none;
     padding: 1rem;
     border-radius: 10px;
     cursor: pointer;
@@ -95,6 +96,8 @@ i{
     width: 100%;
     height: 100%;
     background-color:white;
+    border: 2px solid rgba(34, 33, 33, 0.1);
+
 }
 .product-price{
     color: rgb(7, 196, 7);
@@ -527,6 +530,7 @@ a p{
 }
 .defined-discount-types{
     margin: 1rem 0rem;
+    min-height: 15rem;
     width: 100%;
 }
 .prev-new-discounts{
@@ -536,13 +540,15 @@ a p{
 }
 .chosen-discount{
     color:white !important; 
-    background-color:#4B5563 !important;
+    background-color:#374151 !important;
 }
 .prev-new-discounts button{
+    border-radius: 0.5rem;
     width: 50%;
     background-color: white;
     color: black;
     font-size: 20px;
+    margin: 0px;
 }
 .defined-discount,
 .applied-discount{
@@ -554,7 +560,7 @@ a p{
     border-radius: 10px;
 }
 .defined-discount-active{
-    background-color: #4B5563;
+    background-color: #374151;
 }
 .defined-discount-active h1{
     color: white !important;
@@ -629,6 +635,9 @@ a p{
     height: 30px;
     font-size: 20px;
     outline: none;
+    border-radius: 0.5rem;
+    border: 1px solid black;
+    padding: 0.5rem 0rem;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }

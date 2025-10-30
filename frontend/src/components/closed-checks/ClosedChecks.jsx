@@ -184,11 +184,11 @@ function ClosedChecks() {
                         <p> {check.table_id} </p>
                         <p style={{ display: "flex", flexDirection: "column" }}> {check.payments.length > 1 ? (
                             <>
-                                <span>{check.payments[0].paymentType.name} {check.payments[0].payedPrice}₺</span>
+                                <span>{check.payments[0].paymentName} {check.payments[0].payedPrice}₺</span>
                                 <span>+{(check.payments.length) - 1} Ödeme</span>
                             </>
 
-                        ) : <> <span>{check.payments[0].paymentType.name} </span>
+                        ) : <> <span>{check.payments[0].paymentName} </span>
                             <span>{check.payments[0].payedPrice}₺</span>
                         </>}
                         </p>

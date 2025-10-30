@@ -14,7 +14,6 @@ async def get_orders(customer = Depends(get_current_user)):
     orders_in_database = """SELECT * FROM open_checks WHERE restaurant_name = %s"""
     values = (customer["restaurant"],)
     data = execute_query(orders_in_database, values, True)
-    print(data)
     return data
 
 @router.get("/get_table_order/{table_id}")

@@ -77,13 +77,17 @@ function Payment() {
     function setPayment(index) {
         const paymentType = paymentMethods[index]
         let pPrice = parseFloat(payedPrice)
+        console.log("payed price", pPrice)
         let mInput = parseFloat(moneyInput)
         if (mInput < remainingPrice && mInput > 0) {
             console.log("if")
             pPrice += mInput
+            console.log("paymentyype", paymentType)
             const object = {
-                paymentType: paymentType,
-                payedPrice: remainingPrice,
+                paymentName: paymentType.name,
+                paymentCommission: paymentType.commission,
+                isIncludedIncome: paymentType.includedincome,
+                payedPrice: moneyInput,
             }
             setPayedPrice(parseFloat(pPrice))
             setRemainingPrice((totalPrice - pPrice).toFixed(2))
@@ -92,17 +96,17 @@ function Payment() {
             setZeroOnClick(true)
             const updatedPayments = [...payments, object]
             console.log("updatedPayments", updatedPayments)
-            console.log("object.paymentType", object.paymentType.length)
             const nav = false
             setPaymentToDB(updatedPayments, nav)
 
         } else if (mInput >= remainingPrice) {
             console.log("else")
             const object = {
-                paymentType: paymentType,
+                paymentName: paymentType.name,
+                paymentCommission: paymentType.commission,
+                isIncludedIncome: paymentType.includedincome,
                 payedPrice: remainingPrice,
             }
-            console.log("object.paymentType", object.paymentType.length)
             setRemainingPrice(0)
             setPayedPrice(parseFloat(totalPrice))
             const updatedPayments = [...payments, object];
