@@ -97,6 +97,7 @@ i{
     height: 100%;
     background-color:white;
     border: 2px solid rgba(34, 33, 33, 0.1);
+    position: relative;
 
 }
 .product-price{
@@ -295,20 +296,25 @@ a p{
     margin: 0;
     padding: 0rem 1rem !important;
 }
-
+.order-item-container{
+    background-color: rgb(55 65 81);
+    border-radius: 8px;
+    width: auto;
+}
 .order-items li{
     display: flex;
     padding: 0.8rem 1rem 0.8rem 0rem;
     font-size: 1rem;
     border-bottom:rgb(31, 41, 55) 1px solid;
-    background-color: rgb(55 65 81);
     margin-bottom: 0px;
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
     height: 40px;
-    border-radius: 8px;
     position: relative;
+    background-color: rgb(55 65 81);
+    border-top-right-radius: 8px;
+    border-top-left-radius: 8px;
 }
 
 .product-amount{
@@ -317,6 +323,7 @@ a p{
     padding: 4px 8px;
     background-color: rgb(17 24 39);
     color: white;
+    border-radius: 10px;
     font-weight: 700;
 }
 .order-name{
@@ -536,16 +543,16 @@ a p{
 .prev-new-discounts{
     width: 100%;
     display: flex;
+    background-color: #F3F4F6;
     color: black;
 }
 .chosen-discount{
     color:white !important; 
-    background-color:#374151 !important;
+    background-color:rgb(59, 130, 246) !important;
 }
 .prev-new-discounts button{
     border-radius: 0.5rem;
     width: 50%;
-    background-color: white;
     color: black;
     font-size: 20px;
     margin: 0px;
@@ -553,31 +560,25 @@ a p{
 .defined-discount,
 .applied-discount{
     display: flex;
-    flex-direction: column;
     margin-top: 1rem;
-    padding: 0.5rem 2rem;
+    padding: 1rem 2rem;
     border: 2px solid rgb(191, 196, 202);
     border-radius: 10px;
+    justify-content: space-between;
 }
 .defined-discount-active{
-    background-color: #374151;
+    background-color: rgb(239 246 255);
+    border: 1px solid rgb(59, 130, 246);
 }
 .defined-discount-active h1{
-    color: white !important;
+    color: #1F2937 !important;
 }
 .defined-discount-active p{
-    color: white !important;
+    color: #1F2937 !important;
 }
 
 .defined-discount p{
-    width: 100%;
-    border-radius: 0px;
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    z-index:3333;
-    margin: 0px 0px 10px 0px;
-    color: black;
+    margin: 0px 0px 0px 0px;
 }
 .defined-discount p input{
     width: 20px;
@@ -638,6 +639,207 @@ a p{
     border-radius: 0.5rem;
     border: 1px solid black;
     padding: 0.5rem 0rem;
+}
+.product-condiment{
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 20px ;
+    color: gray;
+}
+
+.combo-container{
+    position: absolute;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+.condiment-item-container{
+    display: flex;
+    flex-direction: row;
+}
+.condimend-append{
+    width: 70%;
+    padding: 1rem;
+    color: black;
+}
+.condiment-order-menu{
+    width: 30%;
+    height: auto;
+    min-height: 46rem;
+    padding: 1.2rem;
+    margin-right: 2rem;
+    border-radius: 16px;
+    background-color: white;box-shadow: 
+  0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  max-height: 46rem;
+}
+.condiment-item-group-name{
+    margin-bottom: 1rem !important;    
+    font-weight: 700;
+    color: #1F2937;
+}
+.condiment-item-button{
+    display: flex;
+    gap: 1rem;
+    background-color: white;
+    width: auto;
+    margin-right: 1rem;
+    padding: .7rem;
+    border-radius: 10px;
+}
+.condiment-item-button p{
+    align-items: center;
+    display: flex;
+}
+.condiment-item-group{
+    display: flex;
+    margin-bottom: 1rem;
+}
+.condiment-group-item-container{
+    height: 85%;
+}
+.condiment-item{
+    display: flex;
+    justify-content: space-between;
+    background-color: #F3F4F6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 10px;
+}
+.condiment-item-info{
+    font-weight: 700;
+    display: flex;
+}
+
+.delete-condiment-item{
+    display: flex;
+    align-items: center;
+}
+.no-condiment-input-yet{
+    border: 1px dashed  rgb(209 213 219);
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+}
+.no-condiment-input-yet p{
+    color: rgb(156 163 175) !important;
+}
+.condiment-item-amount{
+    display: flex;
+    padding: 4px 8px;
+    font-size: 25px;
+    background-color: white;
+    color: black;
+    font-weight: 700;
+    margin-right: 5px;
+}
+.condiment-item-amount span{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.condiment-total{
+    display: flex;
+    color: black;
+}
+.actions-condiment{
+    width: 100%;
+    border-top: 1px solid rgb(229 231 235);
+}
+.condiment-total{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.actions-condiment p,
+.actions-condiment button{
+    font-weight: bold;
+    color: #111827;
+}
+.condiment-action-buttons{
+    display: grid;
+    grid-template-columns: 1fr 1fr ;
+    gap: 1rem;
+}
+.condiment-action-buttons button{
+    width: 100%;
+    border-radius: 10px;
+}
+.condiment-display-container{
+    display: flex;
+    background-color: rgb(55 65 81);
+    width: auto;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    flex-wrap: wrap;
+    padding: 8px;  
+    gap: 10px;
+        border-bottom: rgb(31, 41, 55) 1px solid;
+
+}
+.condiment-display{
+    display: flex;
+    background-color: rgb(75, 85, 99);
+    border-radius: 5px;
+    flex-direction: row;
+}
+.condiment-display p{
+    margin: 0px;
+    font-weight: 600;
+    padding: 5px;
+    white-space: nowrap;
+}
+.how-many-container{
+    display: flex;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 15px;
+    z-index: 1000;
+    border: 1px solid black;
+    padding: 2rem;
+    background-color: #1F2937;
+    width: 20%;
+    flex-direction: column;
+}
+.count-input{
+    padding: 1.5rem 1rem 1.5rem 0rem;
+    color: white;
+    font-size: 32px;
+    
+    text-align: right;
+    border-radius: 0.5rem;
+}
+.input-button-row{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+    margin: 0.5rem;
+}
+.how-many-actions{
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+}
+.how-many-actions button{
+    width: auto;
+    border-radius: 0.5rem;
+    margin: 0px;
+}
+.order-deleted{
+    padding: .5rem;
+    background-color: #fee2e2;
+    width: auto !important;
+    border-radius: 16px;
+    text-align: center;
+    width: 50%;   
+    color: #991b1b !important;
+    font-weight: bold;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }

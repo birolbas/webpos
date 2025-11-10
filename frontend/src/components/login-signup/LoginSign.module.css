@@ -7,6 +7,7 @@
     display: grid;
     place-items: center;
     height: 100vh;
+    background-color: #111827;
 }
 .left-menu img {
     width: 70%;
@@ -32,46 +33,54 @@
     align-items: center;
     border-radius: 15px;
     margin: auto;
-    background-color: rgba(29, 29, 29, 0.685);
+    width: 50%;
 }
 .login-form h1{
-    color: white;
+    color: #1F2937;
     margin-top: 0px;
 }
 .login-form h2{
-    color: white;
+    color: #374152;
     margin-bottom: 0px;
+    font-size: 14px;
 }
 .e-mail-input input{
     box-sizing: border-box;
     width: 100%;
     margin: auto;
     height: 2rem;
-    background-color: rgba(29, 29, 29, 0.685);
+    background-color: white;
     border: none;
-    color: white;
+    color: black;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 0.375rem;
 }
 .password-input input{
     box-sizing: border-box;
     width: 100%;
     margin: auto;
     height: 2rem;
-    background-color: rgba(29, 29, 29, 0.685);
+    background-color: white;
     border: none;
-    color: white;
+    color: black;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 0.375rem;
 
 }
 .login-button button{
     width: 100%;
-    border-radius: 0px;
+    border-radius: 0.375rem;
     padding: 0px;
     margin: 1rem 0rem 0rem 0rem;
     font-size: 22px;
     font-weight: bold;
+    background-color: #111827;
+    color: white;
 }
 .create-acc{
     display: flex;
     flex-direction: row;
+    justify-content: center;
 }
 .create-acc a{
     margin-top: 16px;

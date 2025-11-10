@@ -44,12 +44,7 @@ function MainMenu() {
                     <Link to="/delivery" className={styles['buttons']}>
                         <i className={`bi bi-bicycle ${styles['buttons']}`}></i>
                     </Link>
-                    <Link to="/inventory" className={styles['buttons']}>
-                        <i className={`bi bi-box ${styles['buttons']}`}></i>
-                    </Link>
-                    <Link to="/settings" className={styles['buttons']}>
-                        <i className={`bi bi-gear ${styles['buttons']}`}></i>
-                    </Link>
+
                     <Link to="/" className={`${styles['buttons']} ${styles['quit-icon']}`}>
                         <i className={`bi bi-box-arrow-in-left ${styles['buttons']}`}></i>
                     </Link>

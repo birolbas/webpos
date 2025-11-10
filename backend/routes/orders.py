@@ -56,9 +56,61 @@ async def create_order(request:Request , customer = Depends(get_current_user)):
         return {"status": "success"}
     else:
         order_save_script = """UPDATE open_checks 
-        SET products = %s, total_price = %s, guest_count = %s, tax_total=%s, checkdiscounts=%s, total_discount=%s, total_service_charge=%s, checkservicecharges=%s
+        SET products = %s, total_price = %s, tax_total=%s
         WHERE table_id = %s AND restaurant_name = %s"""
-        values = (orders, total_price, guest_count, tax_total, check_discounts,total_discount, total_service_charge, check_service_charges ,table_id, restaurant_name)
+        values = (orders, total_price, tax_total, table_id, restaurant_name)
         execute_query(order_save_script, values)
         return {"status": "success"}
-    
+
+@router.put("/setGuestCount")
+async def setGuestCount(request:Request , customer = Depends(get_current_user)):
+    data = await request.json()
+    print(data)
+    script = """UPDATE open_checks 
+                SET guest_count = %s WHERE table_id = %s AND restaurant_name = %s """
+    values = (data["guest_count"], data["table_id"], customer["restaurant"])
+    execute_query(script, values)
+    return data
+
+
+@router.put("/setServiceCharge")
+async def setServiceCharge(request:Request , customer = Depends(get_current_user)):
+    data = await request.json()
+    print(data)
+    script = """UPDATE open_checks 
+                SET checkservicecharges = %s,
+                    total_service_charge = %s,
+                    total_price = %s
+                    WHERE table_id = %s AND restaurant_name = %s """
+    values = (json.dumps(data["checkServiceCharges"]), data["total_service_charge"], data["total_price"], data["table_id"], customer["restaurant"])
+    execute_query(script, values)
+    return data
+
+
+
+@router.put("/setCheckDiscounts")
+async def setCheckDiscounts(request:Request , customer = Depends(get_current_user)):
+    data = await request.json()
+    print(data)
+    script = """UPDATE open_checks 
+                SET checkdiscounts = %s,
+                    total_discount = %s,
+                    total_price = %s
+                    WHERE table_id = %s AND restaurant_name = %s """
+    values = (json.dumps(data["checkDiscounts"]), data["total_discount"], data["total_price"], data["table_id"], customer["restaurant"])
+    execute_query(script, values)
+    return data
+
+@router.put("/setItemDiscounts")
+async def setItemDiscounts(request:Request , customer = Depends(get_current_user)):
+    data = await request.json()
+    print("totaldiscount böyle geliyor",data)
+    script = """UPDATE open_checks 
+                SET products  = %s,
+                    total_discount = %s,
+                    total_price = %s
+                    WHERE table_id = %s AND restaurant_name = %s """
+    values = (json.dumps(data["orders"]), data["total_discount"], data["total_price"], data["table_id"], customer["restaurant"])
+    execute_query(script, values)
+    return data
+

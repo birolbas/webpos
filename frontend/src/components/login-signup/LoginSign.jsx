@@ -139,7 +139,7 @@ function LoginSign() {
         return <div className={styles["login-form-container"]}>
             <div className={styles["login-form"]}>
                 <h1>Hoşgeldiniz</h1>
-                <h1>Lütfen Giriş Yapınız.</h1>
+                <h1 style={{fontSize:"16px", color:"#4B5563"}}>Lütfen Giriş Yapınız.</h1>
                 <div className={styles["e-mail-input"]}>
                     <h2>E-Mail</h2>
                     <input type="text" name="" id="e-mail-input" value="restotest@gmail.com" />
@@ -148,13 +148,13 @@ function LoginSign() {
                     <h2>Şifre</h2>
                     <input type="password" name="" id="password-input" value="test" />
                 </div>
-                <a href="">Şifremi unuttum</a>
+                <a style={{justifyContent:"end", margin:"0.5rem 0rem", color:"#111827"}} href="">Şifremi unuttum</a>
                 <div className={styles["login-button"]}>
                     <button onClick={() => loginCheck()}>Giriş Yap</button>
                 </div>
                 <div className={styles["create-acc"]}>
-                    <p style={{ color: "white" }}>Hesabınız mı yok?</p>
-                    <a onClick={e => {
+                    <p style={{ color: "#4B5563" }}>Hesabınız mı yok?</p>
+                    <a style={{ color: "#111827" }} onClick={e => {
                         e.preventDefault();
                         setLogin(false);
                     }}> Hemen oluşturun</a>

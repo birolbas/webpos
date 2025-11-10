@@ -19,12 +19,16 @@ async def get_payment_orders(table_id, customer = Depends(get_current_user)):
 @router.post("/set_payments/{table_id}")
 async def set_payments(table_id: str, request: Request, customer = Depends(get_current_user)):
     payments = await request.json()
-    payments_json = json.dumps(payments)
+    print(payments)
+    payments_json = json.dumps(payments["payments"])
+    paymentCommission = payments["totalPaymentCommission"]
+    print(payments_json)
     restaurant = customer["restaurant"]
+
     orders_in_database = """UPDATE open_checks 
-                           SET payments = %s
+                           SET payments = %s, payment_method_cost = %s
                            WHERE restaurant_name = %s AND table_id = %s"""
-    values = (payments_json, restaurant, table_id)
+    values = (payments_json, paymentCommission, restaurant, table_id)
     execute_query(orders_in_database,values)
     return {"status": "success"}
 
@@ -53,23 +57,30 @@ async def close_check(table_id: str, request: Request, customer = Depends(get_cu
         total_discount = check_info["total_discount"]
         total_service_charge = check_info["total_service_charge"]
         check_service_charges = json.dumps(check_info["checkservicecharges"])
+        payment_method_cost = check_info["payment_method_cost"]
+        product_cost = check_info["product_cost"]
         today = datetime.today().strftime("%Y-%m-%d")
         hour = datetime.now().strftime("%H:%M:%S")
         tax = Decimal('0')
+        checkD = Decimal('0')
+        for checkDiscount in json.loads(check_discounts):
+            if(checkDiscount["isCheckDiscount"]):
+                checkD += checkDiscount["discountAmount"]
         for payment in json.loads(payments):
             for product in json.loads(products):
                 if(payment["isIncludedIncome"]):
-                    product_tax = (Decimal(payment["payedPrice"]) / total_price) * (Decimal(product["price"]) * Decimal(product["taxPercent"] / (100 + product["taxPercent"])))
+                    print(product)
+                    product_tax = (Decimal(payment["payedPrice"]) / total_price) * (Decimal(product["price"] - ((checkD / total_price) * Decimal(product["price"]))) * Decimal(product["taxPercent"] / (100 + product["taxPercent"])))
                     tax += product_tax
                     print("tax is", tax)
                     
         tax = tax.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
         update_closed_check = """INSERT INTO closed_checks
-                               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
         
         values = (id_val, restaurant_name, table_id, check_number, opening_date,
-                products, total_price, payments, guest_count, opening_time, today, hour, check_discounts, total_discount, total_service_charge, check_service_charges, tax)
+                products, total_price, payments, guest_count, opening_time, today, hour, check_discounts, total_discount, total_service_charge, check_service_charges, tax, product_cost, payment_method_cost )
         
         execute_query(update_closed_check, values)
         delete_open_check = """DELETE FROM open_checks WHERE table_id = %s AND restaurant_name = %s"""
@@ -85,7 +96,7 @@ async def close_check(table_id: str, request: Request, customer = Depends(get_cu
         
 
                         update ingredients i 
-                        set stock_quantity = stock_quantity - (rs.amount * ri.quantity * %s)
+                        set stock_quantity = stock_quantity - (rs.quantity * ri.quantity * %s)
                         from recipe_items ri 
                         join recipes r on r.id = ri.recipe_id 
 						join recipe_subrecipes rs on rs.subrecipe_id = r.id
@@ -95,7 +106,7 @@ async def close_check(table_id: str, request: Request, customer = Depends(get_cu
 
         for product in check_info["products"]:
             stock_values = (product["amount"], product["related_recipe_id"], "TEST", product["amount"], product["related_recipe_id"], "TEST")
+            print(stock_values)
             execute_query(ingredientStock_script, stock_values)
-            #execute_query(ingredientStock_script, stock_values)
 
         return restaurant

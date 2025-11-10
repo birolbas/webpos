@@ -12,7 +12,11 @@ function Payment() {
     const [payedPrice, setPayedPrice] = useState(0)
     const [remainingPrice, setRemainingPrice] = useState(0)
     const [zeroOnClick, setZeroOnClick] = useState(true)
+    const [paymentCost, setPaymentCost] = useState(0)
     const navigate = useNavigate()
+    useEffect(()=>{
+        console.log("payments", payments)
+    },[payments])
     useEffect(() => {
         const getOrderFromDB = async () => {
             try {
@@ -32,7 +36,7 @@ function Payment() {
                     setTotalPrice(price)
                     setRemainingPrice(price)
                     setMoneyInput(price)
-                    console.log(getOrdersData[0][7])
+                    console.log("payments",getOrdersData[0].payments)
                     if (getOrdersData[0].payments) {
                         setPayments(getOrdersData[0].payments)
                     }
@@ -58,13 +62,9 @@ function Payment() {
     }, [table_id])
 
     useEffect(() => {
-        console.log("orders", orders)
         setRemainingPrice(totalPrice - payedPrice)
     }, [orders])
 
-    useEffect(()=>{
-        console.log("paymentMethods",paymentMethods)
-    },[paymentMethods])
 
     function getTodayDate() {
         const now = new Date();
@@ -80,27 +80,34 @@ function Payment() {
         console.log("payed price", pPrice)
         let mInput = parseFloat(moneyInput)
         if (mInput < remainingPrice && mInput > 0) {
-            console.log("if")
             pPrice += mInput
-            console.log("paymentyype", paymentType)
+            console.log("mInput is ", mInput, "type is ", typeof mInput)
+            console.log("remainingPrice is ", remainingPrice, "type is ", typeof remainingPrice)
+            const paymentCommission = (paymentType.commission / 100) * moneyInput
+            const totalPaymentCommission = parseFloat((paymentCost + paymentCommission).toFixed(2))
             const object = {
                 paymentName: paymentType.name,
                 paymentCommission: paymentType.commission,
                 isIncludedIncome: paymentType.includedincome,
-                payedPrice: moneyInput,
+                payedPrice: mInput,
             }
             setPayedPrice(parseFloat(pPrice))
             setRemainingPrice((totalPrice - pPrice).toFixed(2))
+            console.log("payments are ", payments, "and the is ", typeof payments)
             setPayments([...payments, object])
             setMoneyInput((remainingPrice- moneyInput).toFixed(2))
             setZeroOnClick(true)
-            const updatedPayments = [...payments, object]
-            console.log("updatedPayments", updatedPayments)
+            const updatedPayments = {
+                payments: [...payments, object],
+                totalPaymentCommission: totalPaymentCommission
+            }
             const nav = false
+            setPaymentCost(totalPaymentCommission)
             setPaymentToDB(updatedPayments, nav)
 
         } else if (mInput >= remainingPrice) {
-            console.log("else")
+            const paymentCommission = (paymentType.commission / 100) * remainingPrice
+            const totalPaymentCommission = parseFloat((paymentCost + paymentCommission).toFixed(2))
             const object = {
                 paymentName: paymentType.name,
                 paymentCommission: paymentType.commission,
@@ -109,17 +116,21 @@ function Payment() {
             }
             setRemainingPrice(0)
             setPayedPrice(parseFloat(totalPrice))
-            const updatedPayments = [...payments, object];
-            setPayments(updatedPayments)
+            const updatedPayments = {
+                payments: [...payments, object],
+                totalPaymentCommission: totalPaymentCommission
+            }
+            setPayments([...payments, object])
             setMoneyInput(remainingPrice- moneyInput)
             setZeroOnClick(true)
 
+            setPaymentCost(totalPaymentCommission)
             const nav = true
             setPaymentToDB(updatedPayments, nav)
         }
+        
     }
     const closeCheck = async (updatedPayments) => {
-        console.log("updatedpayments", updatedPayments)
         try {
             const response = await fetch(`http://localhost:5000/close_check/${table_id}`, {
                 method: "POST",
@@ -165,30 +176,21 @@ function Payment() {
         }
 
     }
-    useEffect(() => {
-        console.log("moneyInput",typeof moneyInput)
 
-    }, [moneyInput])
 
     function paymentInputChange(e) {
         var digit = e.target.textContent;
         if(zeroOnClick){
             let raw = "0.00".replace(".", "").replace(/^0+/, "");
-            console.log("raw", raw)
             raw += digit;
-            console.log("raw", raw)
             let num = parseFloat(raw) / 100;
-            console.log("num", num)
             setMoneyInput(num.toFixed(2))
             setZeroOnClick(false)
         }else{
             setMoneyInput(prev => {
                 let raw = prev.replace(".", "").replace(/^0+/, "");
-                console.log("raw", raw)
                 raw += digit;
-                console.log("raw", raw)
                 let num = parseFloat(raw) / 100;
-                console.log("num", num)
                 return num.toFixed(2);
             })
         }
@@ -229,7 +231,14 @@ function Payment() {
                         </div>
                     ))}
                 </div>
-                <div></div>
+                <div className={style["closed-payments"]}>
+                        {payments?.map((payment, index) => (
+                        <div className={style["closed-payment"]} >
+                            <p style={{fontWeight:"600"}}>{payment.paymentName}</p>
+                            <p style={{color:"rgb(22, 163, 74)"}}>{payment.payedPrice}₺</p>
+                        </div>
+                    ))}
+                </div>
                 <div className={style["payment-inputs"]}>
                     <div className={style["price-input"]}>
                         <h1> {moneyInput} </h1>

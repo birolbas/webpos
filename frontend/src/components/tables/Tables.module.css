@@ -214,6 +214,6 @@ body{
 }
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-    display: flex;
+    display: none;
 }
 

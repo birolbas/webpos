@@ -9,6 +9,7 @@
     display: grid;
     place-items: center; 
     padding: 1rem 1rem;
+    background-color: #111827;
 }
 
 .resto-logo img {
@@ -16,7 +17,7 @@
 }
 .welcome-tag{
     text-align: center; 
-    color: white;
+    color: #374152;
     
 }
 body {
@@ -33,12 +34,12 @@ body {
 }
 
 .right-bar-items {
-    width: 100%;
+    width: auto;
     height: 100%;
     display: grid;
     grid-template-columns: repeat(3,1fr);
     grid-template-rows: 1fr 1fr 1fr;
-    padding: 1rem 0;
+    padding: 2rem ;
     border-radius: 0px;
     gap: 1rem;
 
@@ -55,12 +56,12 @@ body {
     justify-content: center;
     text-decoration: none;
     border-radius: 15px;
-    background-color: #1a1a24;
+    background-color: #111827;
+    border: 1px solid #111827
 
 }
 
 .buttons:hover {
-    background-color: #2a2a35;
     border: 1px solid aquamarine;
 }
 

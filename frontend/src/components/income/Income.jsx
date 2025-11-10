@@ -170,8 +170,8 @@ function Income() {
                         </div>
                         <div className={styles["summary"]}>
                             <p className={styles["summary-headers"]}>En Yoğun Saat</p>
-                            <p className={styles["summary-data"]}>{peakHour.hour}:00</p>
-                            <p className={styles["last-week-comp"]}> {peakHour.total_guest_count} müşteri ile {peakHour.total_method_money}₺ ciro. </p>
+                            <p className={styles["summary-data"]}>{peakHour?.hour}:00</p>
+                            <p className={styles["last-week-comp"]}> {peakHour?.total_guest_count} müşteri ile {peakHour?.total_method_money}₺ ciro. </p>
                         </div>
                     </div>
                 </div>

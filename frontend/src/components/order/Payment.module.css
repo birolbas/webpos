@@ -22,6 +22,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     flex: 1;
+    height: 100px;
 }
 .orders{
     display: flex;
@@ -109,4 +110,17 @@
     color: #111827;
     font-weight: 700;
     font-size: 1.5rem;
+}
+.closed-payments{
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 3rem;
+    overflow-y: auto;
+}
+.closed-payment{
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgb(249 250 251);
+    border-radius: 15px;
 }

@@ -9,11 +9,11 @@ async def get_income(request : Request, customer = Depends(get_current_user)):
     """Get income data"""    
     day_data = await request.json()
     if isinstance(day_data, str) and len(day_data) == 10:
-        values = (day_data, day_data,"TEST", day_data, day_data, "TEST")
+        values = (day_data, day_data,"TEST", "TEST")
         payment_values = (day_data ,day_data,"TEST")
     else:
         day_range = day_data if isinstance(day_data, list) else [day_data]
-        values = (day_range[0], day_range[1], "TEST", day_range[0], day_range[1], "TEST")
+        values = (day_range[0], day_range[1], "TEST", "TEST")
         payment_values = (day_range[0], day_range[1], "TEST")
 
     income_script = """
@@ -46,7 +46,7 @@ async def get_income(request : Request, customer = Depends(get_current_user)):
                             SUM(total_price - tax_total) AS net,
                             COUNT(*) AS check_count
                         FROM open_checks
-                            WHERE openningdate >= %s AND openningdate <= %s AND restaurant_name = %s
+                            WHERE restaurant_name = %s
                     )
                     """
     

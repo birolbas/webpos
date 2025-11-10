@@ -8,7 +8,7 @@ function WaiterLogin() {
 	const [passWord, setPassWord] = useState('');
 	const [index, setIndex] = useState(0);
 	const [loginSuccess, setLoginSuccess] = useState(false);
-
+	const [users, setUsers] = useState([])
 	async function getStaticData() {
 		const customer_settings = await customerSettings()
 		console.log("customer_settings", customer_settings.table_layout[0])
@@ -19,11 +19,17 @@ function WaiterLogin() {
 		localStorage.setItem("Products", JSON.stringify(customer_settings.products))
 		localStorage.setItem("ServiceCharges", JSON.stringify(customer_settings.service_charges))
 		localStorage.setItem("Discounts", JSON.stringify(customer_settings.discounts))
+		localStorage.setItem("Users", JSON.stringify(customer_settings.users))
+		localStorage.setItem("Condiments", JSON.stringify(customer_settings.condiments))
+		setUsers(customer_settings.users)
 	}
 
 	useEffect(()=>{
 		getStaticData()
 	},[])
+	useEffect(()=>{
+		console.log("users, ", users)
+	},[users])
 	function appendPassword(event) {
 		const number = event.target.innerHTML;
 		if (passWord.length < 4) {
@@ -35,11 +41,26 @@ function WaiterLogin() {
 			setIndex(index + 1);
 		}
 	}
+	function deletePassword() {
+		if (passWord.length > 0) {
+			const newPass = passWord.slice(0, -1); // son karakteri sil
+			setPassWord(newPass);
 
+			const newIndex = index - 1;
+			const boxId = "box" + newIndex;
+			const box = document.getElementById(boxId);
+			if (box) box.style.backgroundColor = ""; // eski rengi temizle
+
+			setIndex(newIndex);
+		}
+	}
 	function login() {
-		if (passWord === "1234") {
-			console.log("DOĞRU");
-			setLoginSuccess(true);
+		console.log(users)
+		const existingIndex = users.findIndex(u=>u.pin == passWord)
+		console.log(existingIndex)
+		if (existingIndex != -1) {
+			localStorage.setItem("ActiveUser", JSON.stringify(users[existingIndex]))
+			setLoginSuccess(true)
 		}
 	}
 
@@ -74,7 +95,7 @@ function WaiterLogin() {
 						{[7, 8, 9].map(n => <button key={n} onClick={appendPassword}>{n}</button>)}
 					</div>
 					<div className={WaiterLoginStyles["forthline"]}>
-						<button className={WaiterLoginStyles["actionButtons"]}>
+						<button onClick={()=>deletePassword()} className={WaiterLoginStyles["actionButtons"]}>
 							<i className={`bi bi-backspace ${WaiterLoginStyles["actionButtons"]}`}></i>
 						</button>
 						<button onClick={appendPassword}>0</button>
